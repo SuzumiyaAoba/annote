@@ -1,0 +1,2 @@
+[target.aarch64-apple-darwin]
+rustflags = ["-L", "/nix/store/f7shm8mil633pa6kl6nx3vfpdh2bkva1-libiconv-1.17/lib"]

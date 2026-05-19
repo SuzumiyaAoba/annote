@@ -1,0 +1,38 @@
+.editor-container {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-primary);
+}
+
+.codemirror-wrapper {
+  flex: 1;
+  overflow: hidden;
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.codemirror-wrapper .cm-editor {
+  height: 100%;
+  background: var(--bg-primary);
+}
+
+.codemirror-wrapper .cm-scroller {
+  overflow: auto;
+  padding: 16px 24px;
+  font-family: "JetBrains Mono", "Fira Code", "Cascadia Code", Consolas, monospace;
+}
+
+.codemirror-wrapper .cm-content {
+  max-width: 780px;
+  margin: 0 auto;
+}
+
+.codemirror-wrapper .cm-focused {
+  outline: none;
+}
+
+.codemirror-wrapper .cm-line {
+  padding: 0;
+}
