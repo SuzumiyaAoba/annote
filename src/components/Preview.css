@@ -36,6 +36,32 @@
   background: transparent;
 }
 
+/* ── Mermaid diagrams ── */
+.mermaid-diagram {
+  margin: 1rem 0;
+  text-align: center;
+}
+
+.mermaid-diagram svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.mermaid-error {
+  padding: 1rem;
+  border-radius: 6px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--danger);
+  color: var(--danger);
+  font-size: 85%;
+  overflow: auto;
+}
+
+/* ── KaTeX dark mode ── */
+[data-theme="dark"] .katex {
+  color: #e6edf3;
+}
+
 /* ── Frontmatter table ── */
 .frontmatter-table {
   width: 100%;

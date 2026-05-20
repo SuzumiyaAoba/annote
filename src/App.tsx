@@ -184,7 +184,7 @@ function App() {
               {viewMode === "split" && (
                 <div className="preview-pane split">
                   {isMarkdown(selectedFile) ? (
-                    <Preview content={content} />
+                    <Preview content={content} theme={theme} />
                   ) : (
                     <SyntaxViewer content={content} fileName={selectedFile} theme={theme} />
                   )}
@@ -193,7 +193,7 @@ function App() {
               {viewMode === "preview" && (
                 <div className="preview-pane full">
                   {isMarkdown(selectedFile) ? (
-                    <Preview content={content} />
+                    <Preview content={content} theme={theme} />
                   ) : (
                     <SyntaxViewer content={content} fileName={selectedFile} theme={theme} />
                   )}
