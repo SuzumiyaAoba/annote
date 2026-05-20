@@ -3,7 +3,9 @@ import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
 import { load as parseYaml } from "js-yaml";
 import "github-markdown-css/github-markdown-light.css";
+import "../styles/github-markdown-dark-scoped.css";
 import "highlight.js/styles/github.css";
+import "../styles/hljs-github-dark-scoped.css";
 import "./Preview.css";
 
 interface PreviewProps {
