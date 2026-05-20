@@ -58,6 +58,40 @@
   overflow: auto;
 }
 
+/* ── TikZ diagrams ── */
+.tikz-diagram {
+  margin: 1rem 0;
+  text-align: center;
+}
+
+.tikz-diagram svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.tikz-loading {
+  padding: 1rem;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 85%;
+  font-style: italic;
+}
+
+.tikz-error {
+  padding: 1rem;
+  border-radius: 6px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--danger);
+  color: var(--danger);
+  font-size: 85%;
+  overflow: auto;
+}
+
+.tikz-error-msg {
+  margin: 0.5rem 0 0;
+  font-weight: 600;
+}
+
 /* ── KaTeX dark mode ── */
 [data-theme="dark"] .katex {
   color: #e6edf3;

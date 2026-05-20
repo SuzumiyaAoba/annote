@@ -136,6 +136,9 @@ export default function Preview({ content, theme }: PreviewProps) {
             />
           );
         }
+        if (lang === "tikz") {
+          return <TikzDiagram code={String(children).replace(/\n$/, "")} />;
+        }
         return (
           <code className={className} {...props}>
             {children}
@@ -214,6 +217,107 @@ function MermaidDiagram({
       className="mermaid-diagram"
       dangerouslySetInnerHTML={{ __html: svg }}
     />
+  );
+}
+
+let tikzjaxPromise: Promise<void> | null = null;
+
+function ensureTikzjax(): Promise<void> {
+  if (tikzjaxPromise) return tikzjaxPromise;
+  tikzjaxPromise = new Promise<void>((resolve, reject) => {
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = "https://tikzjax.com/v1/fonts.css";
+    document.head.appendChild(link);
+
+    const script = document.createElement("script");
+    script.src = "https://tikzjax.com/v1/tikzjax.js";
+    script.onload = () => resolve();
+    script.onerror = () => {
+      tikzjaxPromise = null;
+      reject(new Error("tikzjax の読み込みに失敗しました (CDN に接続できません)"));
+    };
+    document.head.appendChild(script);
+  });
+  return tikzjaxPromise;
+}
+
+function TikzDiagram({ code }: { code: string }) {
+  const [svgHtml, setSvgHtml] = useState<string>("");
+  const [error, setError] = useState<string>("");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    setSvgHtml("");
+    setError("");
+    setLoading(true);
+
+    const wrapper = document.createElement("div");
+    wrapper.style.cssText =
+      "position:fixed;left:-9999px;top:-9999px;opacity:0;pointer-events:none";
+    document.body.appendChild(wrapper);
+
+    let timeoutId: ReturnType<typeof setTimeout>;
+
+    ensureTikzjax()
+      .then(() => {
+        if (cancelled) return;
+
+        const tikzEl = document.createElement("script");
+        tikzEl.type = "text/tikz";
+        tikzEl.textContent = code;
+        wrapper.appendChild(tikzEl);
+
+        const obs = new MutationObserver(() => {
+          const svg = wrapper.querySelector("svg");
+          if (svg && !cancelled) {
+            clearTimeout(timeoutId);
+            setSvgHtml(svg.outerHTML);
+            setLoading(false);
+            obs.disconnect();
+            if (document.body.contains(wrapper)) document.body.removeChild(wrapper);
+          }
+        });
+        obs.observe(wrapper, { childList: true, subtree: true });
+
+        timeoutId = setTimeout(() => {
+          obs.disconnect();
+          if (document.body.contains(wrapper)) document.body.removeChild(wrapper);
+          if (!cancelled) {
+            setError("タイムアウト: TikZ のレンダリングが完了しませんでした");
+            setLoading(false);
+          }
+        }, 60_000);
+      })
+      .catch((err: Error) => {
+        if (document.body.contains(wrapper)) document.body.removeChild(wrapper);
+        if (!cancelled) {
+          setError(err.message);
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timeoutId!);
+      if (document.body.contains(wrapper)) document.body.removeChild(wrapper);
+    };
+  }, [code]);
+
+  if (loading) {
+    return <div className="tikz-loading">TikZ をレンダリング中…</div>;
+  }
+  if (error) {
+    return (
+      <div className="tikz-error">
+        <pre><code>{code}</code></pre>
+        <p className="tikz-error-msg">{error}</p>
+      </div>
+    );
+  }
+  return (
+    <div className="tikz-diagram" dangerouslySetInnerHTML={{ __html: svgHtml }} />
   );
 }
 

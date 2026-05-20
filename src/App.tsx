@@ -60,11 +60,13 @@ function App() {
   const openFolder = useCallback(async () => {
     const selected = await open({ directory: true, multiple: false });
     if (typeof selected === "string") {
+      const dirPaths = await invoke<string[]>("get_dir_paths", { dirPath: selected });
+      // invoke の後にまとめて更新することで React バッチングにより
+      // FileTreeView が正しい paths で一度だけ再マウントされる
       setFolderPath(selected);
       setSelectedFile(null);
       setContent("");
       setIsDirty(false);
-      const dirPaths = await invoke<string[]>("get_dir_paths", { dirPath: selected });
       setPaths(dirPaths);
     }
   }, []);
