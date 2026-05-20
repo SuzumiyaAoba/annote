@@ -2,12 +2,13 @@ import CodeMirror from "@uiw/react-codemirror";
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
 import { languages } from "@codemirror/language-data";
 import { EditorView } from "@codemirror/view";
-import { githubDark } from "@uiw/codemirror-theme-github";
+import { githubDark, githubLight } from "@uiw/codemirror-theme-github";
 import "./Editor.css";
 
 interface EditorProps {
   value: string;
   onChange: (value: string) => void;
+  theme: "dark" | "light";
 }
 
 const extensions = [
@@ -15,13 +16,13 @@ const extensions = [
   EditorView.lineWrapping,
 ];
 
-export default function Editor({ value, onChange }: EditorProps) {
+export default function Editor({ value, onChange, theme }: EditorProps) {
   return (
     <div className="editor-container">
       <CodeMirror
         value={value}
         extensions={extensions}
-        theme={githubDark}
+        theme={theme === "dark" ? githubDark : githubLight}
         onChange={onChange}
         height="100%"
         className="codemirror-wrapper"

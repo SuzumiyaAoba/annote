@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import CodeMirror from "@uiw/react-codemirror";
-import { githubDark } from "@uiw/codemirror-theme-github";
+import { githubDark, githubLight } from "@uiw/codemirror-theme-github";
 import { LanguageDescription, LanguageSupport } from "@codemirror/language";
 import { languages } from "@codemirror/language-data";
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
@@ -11,15 +11,15 @@ import "./SyntaxViewer.css";
 interface SyntaxViewerProps {
   content: string;
   fileName: string;
+  theme: "dark" | "light";
 }
 
-export default function SyntaxViewer({ content, fileName }: SyntaxViewerProps) {
+export default function SyntaxViewer({ content, fileName, theme }: SyntaxViewerProps) {
   const [langSupport, setLangSupport] = useState<LanguageSupport | null>(null);
 
   useEffect(() => {
     const ext = fileName.split(".").pop()?.toLowerCase() ?? "";
 
-    // Markdown は lang-markdown で処理（コードブロック内ハイライト付き）
     if (ext === "md" || ext === "markdown") {
       setLangSupport(markdown({ base: markdownLanguage, codeLanguages: languages }));
       return;
@@ -42,6 +42,7 @@ export default function SyntaxViewer({ content, fileName }: SyntaxViewerProps) {
     () => [
       EditorView.lineWrapping,
       EditorState.readOnly.of(true),
+      EditorView.editable.of(false),
       ...(langSupport ? [langSupport] : []),
     ],
     [langSupport]
@@ -55,7 +56,7 @@ export default function SyntaxViewer({ content, fileName }: SyntaxViewerProps) {
       <CodeMirror
         value={content}
         extensions={extensions}
-        theme={githubDark}
+        theme={theme === "dark" ? githubDark : githubLight}
         readOnly
         height="100%"
         className="syntax-viewer-cm"

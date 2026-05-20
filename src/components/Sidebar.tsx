@@ -1,26 +1,35 @@
 import { useFileTree, FileTree } from "@pierre/trees/react";
 import "./Sidebar.css";
 
-// Catppuccin Mocha カラーパレット
-const TREE_THEME: React.CSSProperties = {
-  // 背景・テキスト
-  "--trees-bg-override": "#181825",           // bg-secondary (サイドバー背景)
-  "--trees-fg-override": "#cdd6f4",           // text
-  "--trees-fg-muted-override": "#6c7086",     // overlay0
-  // ホバー背景
-  "--trees-bg-muted-override": "#313244",     // surface0
-  // ボーダー
-  "--trees-border-color-override": "#45475a", // surface1
-  // 選択
-  "--trees-selected-bg-override": "#89b4fa",  // blue
-  "--trees-selected-fg-override": "#1e1e2e",  // base
-  // アクセント
-  "--trees-accent-override": "#89b4fa",
-  // フォント
+const TREE_THEME_DARK: React.CSSProperties = {
+  "--trees-bg-override": "#161b22",
+  "--trees-fg-override": "#e6edf3",
+  "--trees-fg-muted-override": "#8b949e",
+  "--trees-bg-muted-override": "#21262d",
+  "--trees-border-color-override": "#30363d",
+  "--trees-selected-bg-override": "#388bfd26",
+  "--trees-selected-fg-override": "#58a6ff",
+  "--trees-accent-override": "#58a6ff",
   "--trees-font-family-override":
     "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
   "--trees-font-size-override": "13px",
-  // レイアウト
+  height: "100%",
+  width: "100%",
+  display: "block",
+} as React.CSSProperties;
+
+const TREE_THEME_LIGHT: React.CSSProperties = {
+  "--trees-bg-override": "#f6f8fa",
+  "--trees-fg-override": "#1f2328",
+  "--trees-fg-muted-override": "#656d76",
+  "--trees-bg-muted-override": "#eaeef2",
+  "--trees-border-color-override": "#d0d7de",
+  "--trees-selected-bg-override": "#0969da1a",
+  "--trees-selected-fg-override": "#0969da",
+  "--trees-accent-override": "#0969da",
+  "--trees-font-family-override":
+    "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+  "--trees-font-size-override": "13px",
   height: "100%",
   width: "100%",
   display: "block",
@@ -32,6 +41,7 @@ interface SidebarProps {
   selectedFile: string | null;
   onFileSelect: (path: string) => void;
   onOpenFolder: () => void;
+  theme: "dark" | "light";
 }
 
 export default function Sidebar({
@@ -40,6 +50,7 @@ export default function Sidebar({
   selectedFile,
   onFileSelect,
   onOpenFolder,
+  theme,
 }: SidebarProps) {
   const folderName = folderPath
     ? folderPath.split("/").pop() || folderPath
@@ -72,6 +83,7 @@ export default function Sidebar({
             paths={paths}
             selectedFile={selectedFile}
             onFileSelect={onFileSelect}
+            theme={theme}
           />
         ) : folderPath ? (
           <div className="empty-folder">フォルダが空です</div>
@@ -85,9 +97,10 @@ interface FileTreeViewProps {
   paths: string[];
   selectedFile: string | null;
   onFileSelect: (path: string) => void;
+  theme: "dark" | "light";
 }
 
-function FileTreeView({ paths, selectedFile, onFileSelect }: FileTreeViewProps) {
+function FileTreeView({ paths, selectedFile, onFileSelect, theme }: FileTreeViewProps) {
   const { model } = useFileTree({
     paths,
     initialExpansion: "open",
@@ -100,7 +113,8 @@ function FileTreeView({ paths, selectedFile, onFileSelect }: FileTreeViewProps) 
     },
   });
 
-  return <FileTree model={model} style={TREE_THEME} />;
+  const treeTheme = theme === "dark" ? TREE_THEME_DARK : TREE_THEME_LIGHT;
+  return <FileTree model={model} style={treeTheme} />;
 }
 
 function FolderOpenIcon() {

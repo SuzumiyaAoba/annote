@@ -1,26 +1,27 @@
-use walkdir::WalkDir;
+use ignore::WalkBuilder;
 
 #[tauri::command]
 fn get_dir_paths(dir_path: String) -> Result<Vec<String>, String> {
     let base = std::path::Path::new(&dir_path);
 
-    let mut paths: Vec<String> = WalkDir::new(base)
-        .min_depth(1)
-        .into_iter()
+    let mut paths: Vec<String> = WalkBuilder::new(base)
+        .hidden(true)
+        .git_ignore(true)
+        .git_global(true)
+        .git_exclude(true)
+        .build()
         .filter_map(|e| e.ok())
-        .filter(|e| {
-            // Skip hidden entries
-            !e.file_name().to_string_lossy().starts_with('.')
-        })
+        .filter(|e| e.depth() > 0)
         .filter_map(|e| {
-            let is_dir = e.file_type().is_dir();
+            let is_dir = e.file_type().map(|ft| ft.is_dir()).unwrap_or(false);
             let rel = e
                 .path()
                 .strip_prefix(base)
                 .ok()
                 .map(|p| p.to_string_lossy().to_string())?;
-            // Append trailing slash for directories so @pierre/trees can
-            // distinguish empty directories from files.
+            if rel.is_empty() {
+                return None;
+            }
             if is_dir {
                 Some(format!("{}/", rel))
             } else {
