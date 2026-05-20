@@ -42,14 +42,16 @@ function App() {
         const confirmed = window.confirm("変更を破棄しますか？");
         if (!confirmed) return;
       }
+      // ディレクトリパス（末尾 /）は無視
+      if (relativePath.endsWith("/")) return;
       const fullPath = `${folderPath}/${relativePath}`;
       try {
         const text = await readTextFile(fullPath);
         setSelectedFile(relativePath);
         setContent(text);
         setIsDirty(false);
-      } catch {
-        // Directory selected, skip
+      } catch (err) {
+        console.error("ファイル読み込みエラー:", fullPath, err);
       }
     },
     [folderPath, isDirty, selectedFile]
