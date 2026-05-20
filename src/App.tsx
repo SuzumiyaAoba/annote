@@ -5,7 +5,12 @@ import { invoke } from "@tauri-apps/api/core";
 import Sidebar from "./components/Sidebar";
 import Editor from "./components/Editor";
 import Preview from "./components/Preview";
+import SyntaxViewer from "./components/SyntaxViewer";
 import "./App.css";
+
+function isMarkdown(path: string) {
+  return /\.(md|markdown)$/i.test(path);
+}
 
 type ViewMode = "edit" | "preview" | "split";
 
@@ -113,7 +118,7 @@ function App() {
             <button
               className={`toggle-btn ${viewMode === "preview" ? "active" : ""}`}
               onClick={() => setViewMode("preview")}
-              title="プレビューモード"
+              title="プレビューモード（.mdはレンダリング、それ以外はコード表示）"
             >
               プレビュー
             </button>
@@ -149,9 +154,18 @@ function App() {
                   <Editor value={content} onChange={handleContentChange} />
                 </div>
               )}
-              {(viewMode === "preview" || viewMode === "split") && (
-                <div className={`preview-pane ${viewMode === "split" ? "split" : "full"}`}>
-                  <Preview content={content} />
+              {viewMode === "split" && (
+                <div className="preview-pane split">
+                  <SyntaxViewer content={content} fileName={selectedFile} />
+                </div>
+              )}
+              {viewMode === "preview" && (
+                <div className="preview-pane full">
+                  {isMarkdown(selectedFile) ? (
+                    <Preview content={content} />
+                  ) : (
+                    <SyntaxViewer content={content} fileName={selectedFile} />
+                  )}
                 </div>
               )}
             </>

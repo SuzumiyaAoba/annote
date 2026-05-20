@@ -1,0 +1,55 @@
+.syntax-viewer {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-primary);
+  position: relative;
+}
+
+.syntax-viewer-lang-label {
+  position: absolute;
+  top: 8px;
+  right: 16px;
+  font-size: 11px;
+  color: var(--text-muted);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 2px 8px;
+  z-index: 10;
+  pointer-events: none;
+  letter-spacing: 0.03em;
+}
+
+.syntax-viewer-cm {
+  flex: 1;
+  overflow: hidden;
+  font-size: 14px;
+}
+
+.syntax-viewer-cm .cm-editor {
+  height: 100%;
+  background: var(--bg-primary);
+}
+
+.syntax-viewer-cm .cm-scroller {
+  overflow: auto;
+  padding: 16px 0;
+  font-family: "JetBrains Mono", "Fira Code", "Cascadia Code", Consolas, monospace;
+  line-height: 1.6;
+}
+
+.syntax-viewer-cm .cm-focused {
+  outline: none;
+}
+
+/* 読み取り専用なのでカーソルを非表示 */
+.syntax-viewer-cm .cm-cursor {
+  display: none !important;
+}
+
+/* 選択ハイライトは残す */
+.syntax-viewer-cm .cm-selectionBackground {
+  background: rgba(137, 180, 250, 0.2) !important;
+}
