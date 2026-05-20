@@ -1,26 +1,30 @@
 import { useFileTree, FileTree } from "@pierre/trees/react";
 import "./Sidebar.css";
 
-const TREE_UNSAFE_CSS = `
-  button[data-type='item'] {
-    border-radius: 4px;
-    font-size: 13px;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    color: #a6adc8;
-  }
-  button[data-type='item']:hover {
-    background: #313244;
-    color: #cdd6f4;
-  }
-  button[data-type='item'][data-item-selected='true'] {
-    background: #89b4fa !important;
-    color: #1e1e2e !important;
-  }
-  [data-type='directory-label'] {
-    font-size: 13px;
-    color: #a6adc8;
-  }
-`;
+// Catppuccin Mocha カラーパレット
+const TREE_THEME: React.CSSProperties = {
+  // 背景・テキスト
+  "--trees-bg-override": "#181825",           // bg-secondary (サイドバー背景)
+  "--trees-fg-override": "#cdd6f4",           // text
+  "--trees-fg-muted-override": "#6c7086",     // overlay0
+  // ホバー背景
+  "--trees-bg-muted-override": "#313244",     // surface0
+  // ボーダー
+  "--trees-border-color-override": "#45475a", // surface1
+  // 選択
+  "--trees-selected-bg-override": "#89b4fa",  // blue
+  "--trees-selected-fg-override": "#1e1e2e",  // base
+  // アクセント
+  "--trees-accent-override": "#89b4fa",
+  // フォント
+  "--trees-font-family-override":
+    "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+  "--trees-font-size-override": "13px",
+  // レイアウト
+  height: "100%",
+  width: "100%",
+  display: "block",
+} as React.CSSProperties;
 
 interface SidebarProps {
   folderPath: string | null;
@@ -63,7 +67,6 @@ export default function Sidebar({
 
       <div className="sidebar-tree">
         {folderPath && paths.length > 0 ? (
-          // key でフォルダ変更時に useFileTree を強制リマウント
           <FileTreeView
             key={folderPath}
             paths={paths}
@@ -95,16 +98,9 @@ function FileTreeView({ paths, selectedFile, onFileSelect }: FileTreeViewProps) 
         onFileSelect(path);
       }
     },
-    unsafeCSS: TREE_UNSAFE_CSS,
   });
 
-  return (
-    <FileTree
-      model={model}
-      // height はインラインスタイルで指定（Shadow DOM では className が効かない）
-      style={{ height: "100%", width: "100%", display: "block" }}
-    />
-  );
+  return <FileTree model={model} style={TREE_THEME} />;
 }
 
 function FolderOpenIcon() {
