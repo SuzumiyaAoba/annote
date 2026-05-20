@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import CodeMirror from "@uiw/react-codemirror";
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
 import { languages } from "@codemirror/language-data";
@@ -9,14 +10,29 @@ interface EditorProps {
   value: string;
   onChange: (value: string) => void;
   theme: "dark" | "light";
+  fontFamily: string;
 }
 
-const extensions = [
+const BASE_EXTENSIONS = [
   markdown({ base: markdownLanguage, codeLanguages: languages }),
   EditorView.lineWrapping,
 ];
 
-export default function Editor({ value, onChange, theme }: EditorProps) {
+export default function Editor({ value, onChange, theme, fontFamily }: EditorProps) {
+  const fontTheme = useMemo(
+    () =>
+      EditorView.theme({
+        ".cm-scroller": { fontFamily },
+        ".cm-content": { fontFamily },
+      }),
+    [fontFamily]
+  );
+
+  const extensions = useMemo(
+    () => [...BASE_EXTENSIONS, fontTheme],
+    [fontTheme]
+  );
+
   return (
     <div className="editor-container">
       <CodeMirror
@@ -27,7 +43,7 @@ export default function Editor({ value, onChange, theme }: EditorProps) {
         height="100%"
         className="codemirror-wrapper"
         basicSetup={{
-          lineNumbers: false,
+          lineNumbers: true,
           foldGutter: false,
           highlightActiveLine: true,
           bracketMatching: true,

@@ -18,10 +18,11 @@
   border-radius: 3px;
 }
 
-/* Layout only — colors handled by github-markdown-{light,dark}-scoped.css */
+/* Layout + font — colors handled by github-markdown-{light,dark}-scoped.css */
 .markdown-body {
   max-width: 780px;
   margin: 0 auto;
+  font-family: var(--font-preview) !important;
 }
 
 /*

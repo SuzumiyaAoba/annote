@@ -24,13 +24,17 @@
   font-family: "JetBrains Mono", "Fira Code", "Cascadia Code", Consolas, monospace;
 }
 
-.codemirror-wrapper .cm-content {
-  max-width: 780px;
-  margin: 0 auto;
-}
 
 .codemirror-wrapper .cm-focused {
   outline: none;
+}
+
+.codemirror-wrapper .cm-lineNumbers .cm-gutterElement {
+  padding-right: 12px;
+}
+
+.codemirror-wrapper .cm-content {
+  padding-left: 12px;
 }
 
 .codemirror-wrapper .cm-line {

@@ -12,9 +12,10 @@ interface SyntaxViewerProps {
   content: string;
   fileName: string;
   theme: "dark" | "light";
+  fontFamily: string;
 }
 
-export default function SyntaxViewer({ content, fileName, theme }: SyntaxViewerProps) {
+export default function SyntaxViewer({ content, fileName, theme, fontFamily }: SyntaxViewerProps) {
   const [langSupport, setLangSupport] = useState<LanguageSupport | null>(null);
 
   useEffect(() => {
@@ -38,14 +39,24 @@ export default function SyntaxViewer({ content, fileName, theme }: SyntaxViewerP
     }
   }, [fileName]);
 
+  const fontTheme = useMemo(
+    () =>
+      EditorView.theme({
+        ".cm-scroller": { fontFamily },
+        ".cm-content": { fontFamily },
+      }),
+    [fontFamily]
+  );
+
   const extensions = useMemo(
     () => [
       EditorView.lineWrapping,
       EditorState.readOnly.of(true),
       EditorView.editable.of(false),
+      fontTheme,
       ...(langSupport ? [langSupport] : []),
     ],
-    [langSupport]
+    [langSupport, fontTheme]
   );
 
   return (

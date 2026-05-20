@@ -6,6 +6,7 @@ import Sidebar from "./components/Sidebar";
 import Editor from "./components/Editor";
 import Preview from "./components/Preview";
 import SyntaxViewer from "./components/SyntaxViewer";
+import SettingsModal, { AppSettings, DEFAULT_SETTINGS } from "./components/Settings";
 import "./App.css";
 
 function isMarkdown(path: string) {
@@ -21,6 +22,14 @@ function getInitialTheme(): Theme {
   return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
 
+function getInitialSettings(): AppSettings {
+  try {
+    const stored = localStorage.getItem("settings");
+    if (stored) return { ...DEFAULT_SETTINGS, ...JSON.parse(stored) };
+  } catch {}
+  return DEFAULT_SETTINGS;
+}
+
 function App() {
   const [folderPath, setFolderPath] = useState<string | null>(null);
   const [paths, setPaths] = useState<string[]>([]);
@@ -30,11 +39,19 @@ function App() {
   const [viewMode, setViewMode] = useState<ViewMode>("split");
   const [isSaving, setIsSaving] = useState(false);
   const [theme, setTheme] = useState<Theme>(getInitialTheme);
+  const [settings, setSettings] = useState<AppSettings>(getInitialSettings);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
     localStorage.setItem("theme", theme);
   }, [theme]);
+
+  useEffect(() => {
+    document.documentElement.style.setProperty("--font-editor", settings.fontEditor);
+    document.documentElement.style.setProperty("--font-preview", settings.fontPreview);
+    localStorage.setItem("settings", JSON.stringify(settings));
+  }, [settings]);
 
   const toggleTheme = useCallback(() => {
     setTheme((t) => (t === "dark" ? "light" : "dark"));
@@ -160,6 +177,14 @@ function App() {
           >
             {theme === "dark" ? <SunIcon /> : <MoonIcon />}
           </button>
+
+          <button
+            className="toolbar-btn theme-btn"
+            onClick={() => setIsSettingsOpen(true)}
+            title="設定"
+          >
+            <GearIcon />
+          </button>
         </div>
       </header>
 
@@ -178,7 +203,12 @@ function App() {
             <>
               {(viewMode === "edit" || viewMode === "split") && (
                 <div className={`editor-pane ${viewMode === "split" ? "split" : "full"}`}>
-                  <Editor value={content} onChange={handleContentChange} theme={theme} />
+                  <Editor
+                    value={content}
+                    onChange={handleContentChange}
+                    theme={theme}
+                    fontFamily={settings.fontEditor}
+                  />
                 </div>
               )}
               {viewMode === "split" && (
@@ -186,7 +216,12 @@ function App() {
                   {isMarkdown(selectedFile) ? (
                     <Preview content={content} theme={theme} />
                   ) : (
-                    <SyntaxViewer content={content} fileName={selectedFile} theme={theme} />
+                    <SyntaxViewer
+                      content={content}
+                      fileName={selectedFile}
+                      theme={theme}
+                      fontFamily={settings.fontEditor}
+                    />
                   )}
                 </div>
               )}
@@ -195,7 +230,12 @@ function App() {
                   {isMarkdown(selectedFile) ? (
                     <Preview content={content} theme={theme} />
                   ) : (
-                    <SyntaxViewer content={content} fileName={selectedFile} theme={theme} />
+                    <SyntaxViewer
+                      content={content}
+                      fileName={selectedFile}
+                      theme={theme}
+                      fontFamily={settings.fontEditor}
+                    />
                   )}
                 </div>
               )}
@@ -214,6 +254,13 @@ function App() {
           )}
         </div>
       </div>
+
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        settings={settings}
+        onChange={setSettings}
+      />
     </div>
   );
 }
@@ -254,6 +301,15 @@ function MoonIcon() {
   return (
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+    </svg>
+  );
+}
+
+function GearIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
     </svg>
   );
 }
