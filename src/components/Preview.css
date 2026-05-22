@@ -62,9 +62,13 @@
 .tikz-diagram {
   margin: 1rem 0;
   text-align: center;
+  position: relative;
 }
 
 .tikz-diagram svg {
+  position: static !important;
+  display: block;
+  margin: 0 auto;
   max-width: 100%;
   height: auto;
 }

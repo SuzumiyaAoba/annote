@@ -220,28 +220,6 @@ function MermaidDiagram({
   );
 }
 
-let tikzjaxPromise: Promise<void> | null = null;
-
-function ensureTikzjax(): Promise<void> {
-  if (tikzjaxPromise) return tikzjaxPromise;
-  tikzjaxPromise = new Promise<void>((resolve, reject) => {
-    const link = document.createElement("link");
-    link.rel = "stylesheet";
-    link.href = "https://tikzjax.com/v1/fonts.css";
-    document.head.appendChild(link);
-
-    const script = document.createElement("script");
-    script.src = "https://tikzjax.com/v1/tikzjax.js";
-    script.onload = () => resolve();
-    script.onerror = () => {
-      tikzjaxPromise = null;
-      reject(new Error("tikzjax の読み込みに失敗しました (CDN に接続できません)"));
-    };
-    document.head.appendChild(script);
-  });
-  return tikzjaxPromise;
-}
-
 function TikzDiagram({ code }: { code: string }) {
   const [svgHtml, setSvgHtml] = useState<string>("");
   const [error, setError] = useState<string>("");
@@ -253,55 +231,61 @@ function TikzDiagram({ code }: { code: string }) {
     setError("");
     setLoading(true);
 
-    const wrapper = document.createElement("div");
-    wrapper.style.cssText =
-      "position:fixed;left:-9999px;top:-9999px;opacity:0;pointer-events:none";
-    document.body.appendChild(wrapper);
+    // tikzjax はページロード時に <script type="text/tikz"> を処理するため、
+    // srcdoc iframe でその通常フローを再現する。srcdoc は親と同一オリジンになるので
+    // contentDocument へのアクセスが可能。
+    const iframe = document.createElement("iframe");
+    iframe.style.cssText =
+      "position:fixed;left:-9999px;top:-9999px;width:800px;height:600px;border:none";
+    document.body.appendChild(iframe);
 
-    let timeoutId: ReturnType<typeof setTimeout>;
+    // TikZ ソース内の </script を保護 (HTML パーサーがスクリプト要素を閉じるのを防ぐ)
+    const safeCode = code.replace(/<\/script/gi, "< /script");
 
-    ensureTikzjax()
-      .then(() => {
-        if (cancelled) return;
+    iframe.srcdoc = [
+      "<!DOCTYPE html><html><head>",
+      '<link rel="stylesheet" href="https://tikzjax.com/v1/fonts.css">',
+      "</head><body>",
+      `<script type="text/tikz">${safeCode}</script>`,
+      '<script src="https://tikzjax.com/v1/tikzjax.js"></script>',
+      "</body></html>",
+    ].join("\n");
 
-        const tikzEl = document.createElement("script");
-        tikzEl.type = "text/tikz";
-        tikzEl.textContent = code;
-        wrapper.appendChild(tikzEl);
+    const timeoutId = setTimeout(() => {
+      clearInterval(pollId);
+      if (document.body.contains(iframe)) document.body.removeChild(iframe);
+      if (!cancelled) {
+        setError("タイムアウト: TikZ のレンダリングが完了しませんでした");
+        setLoading(false);
+      }
+    }, 60_000);
 
-        const obs = new MutationObserver(() => {
-          const svg = wrapper.querySelector("svg");
-          if (svg && !cancelled) {
-            clearTimeout(timeoutId);
-            setSvgHtml(svg.outerHTML);
-            setLoading(false);
-            obs.disconnect();
-            if (document.body.contains(wrapper)) document.body.removeChild(wrapper);
-          }
-        });
-        obs.observe(wrapper, { childList: true, subtree: true });
-
-        timeoutId = setTimeout(() => {
-          obs.disconnect();
-          if (document.body.contains(wrapper)) document.body.removeChild(wrapper);
+    const pollId = setInterval(() => {
+      if (cancelled) { clearInterval(pollId); return; }
+      try {
+        const svg = iframe.contentDocument?.querySelector("svg");
+        if (svg) {
+          clearInterval(pollId);
+          clearTimeout(timeoutId);
           if (!cancelled) {
-            setError("タイムアウト: TikZ のレンダリングが完了しませんでした");
+            // tikzjax が付与する position: absolute 等を除去して inline に戻す
+            const clone = svg.cloneNode(true) as SVGElement;
+            for (const prop of ["position", "left", "top", "right", "bottom"]) {
+              clone.style.removeProperty(prop);
+            }
+            setSvgHtml(clone.outerHTML);
             setLoading(false);
           }
-        }, 60_000);
-      })
-      .catch((err: Error) => {
-        if (document.body.contains(wrapper)) document.body.removeChild(wrapper);
-        if (!cancelled) {
-          setError(err.message);
-          setLoading(false);
+          if (document.body.contains(iframe)) document.body.removeChild(iframe);
         }
-      });
+      } catch { /* cross-origin access error */ }
+    }, 500);
 
     return () => {
       cancelled = true;
-      clearTimeout(timeoutId!);
-      if (document.body.contains(wrapper)) document.body.removeChild(wrapper);
+      clearInterval(pollId);
+      clearTimeout(timeoutId);
+      if (document.body.contains(iframe)) document.body.removeChild(iframe);
     };
   }, [code]);
 
