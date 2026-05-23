@@ -8,16 +8,20 @@ export interface TocHeading {
 
 export function extractHeadings(markdown: string): TocHeading[] {
   const lines = markdown.split("\n");
+  const counters: Record<string, number> = {};
   return lines
     .map((line) => {
       const match = /^(#{1,4})\s+(.+)$/.exec(line.trim());
       if (!match) return null;
       const level = match[1].length;
       const text = match[2].replace(/[*_`~\[\]]/g, "").trim();
-      const id = text
+      const baseId = text
         .toLowerCase()
         .replace(/\s+/g, "-")
         .replace(/[^\w　-鿿-]/g, "");
+      counters[baseId] = (counters[baseId] ?? 0) + 1;
+      const count = counters[baseId];
+      const id = count > 1 ? `${baseId}-${count}` : baseId;
       return { level, text, id };
     })
     .filter((h): h is TocHeading => h !== null);

@@ -145,9 +145,13 @@ export default function Preview({ content, theme }: PreviewProps) {
   }, [folderPath]);
 
   const headingCounters = useRef<Record<string, number>>({});
+  const prevBodyRef = useRef<string>("");
+  if (prevBodyRef.current !== body) {
+    prevBodyRef.current = body;
+    headingCounters.current = {};
+  }
 
   const components = useMemo<Components>(() => {
-    headingCounters.current = {};
     const makeHeading = (Tag: "h1" | "h2" | "h3" | "h4" | "h5" | "h6") =>
       function Heading({ children, ...props }: React.HTMLAttributes<HTMLHeadingElement>) {
         const text = String(children ?? "")

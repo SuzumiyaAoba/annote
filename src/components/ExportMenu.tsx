@@ -21,6 +21,11 @@ export default function ExportMenu() {
     }
 
     const fileName = tab.relativePath?.replace(/\.(md|markdown)$/i, "") ?? "export";
+    const safeTitle = fileName
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
     const targetPath = await save({
       defaultPath: `${fileName}.html`,
       filters: [{ name: "HTML", extensions: ["html"] }],
@@ -42,7 +47,7 @@ export default function ExportMenu() {
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>${fileName}</title>
+<title>${safeTitle}</title>
 <style>${styles}</style>
 </head>
 <body class="markdown-body" data-theme="light" style="max-width:900px;margin:0 auto;padding:40px 24px;">

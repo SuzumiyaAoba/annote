@@ -10,9 +10,8 @@ function countStats(content: string) {
 }
 
 export default function StatusBar() {
-  const getActiveTab = useTabsStore((s) => s.getActiveTab);
+  const activeTab = useTabsStore((s) => s.tabs.find((t) => t.id === s.activeId) ?? null);
   const isSaving = useTabsStore((s) => s.isSaving);
-  const activeTab = getActiveTab();
 
   const stats = useMemo(
     () => (activeTab ? countStats(activeTab.content) : null),

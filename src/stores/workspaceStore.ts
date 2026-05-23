@@ -72,12 +72,23 @@ export const useWorkspaceStore = create<WorkspaceState>()((set, get) => ({
   deleteEntry: async (relativePath: string, isDir: boolean) => {
     const { folderPath, refreshPaths } = get();
     if (!folderPath) return;
-    const confirmed = window.confirm(`「${relativePath.replace(/\/$/, "")}」を削除しますか？`);
-    if (!confirmed) return;
-    const fullPath = `${folderPath}/${relativePath.replace(/\/$/, "")}`;
+    const cleanPath = relativePath.replace(/\/$/, "");
+    const { tabs } = useTabsStore.getState();
+    const affectedTabs = isDir
+      ? tabs.filter((t) => t.relativePath?.startsWith(`${cleanPath}/`))
+      : tabs.filter((t) => t.relativePath === relativePath);
+    const dirtyCount = affectedTabs.filter((t) => t.content !== t.savedContent).length;
+    const message =
+      dirtyCount > 0
+        ? `「${cleanPath}」を削除しますか？\n未保存の変更が ${dirtyCount} 件あります。削除すると失われます。`
+        : `「${cleanPath}」を削除しますか？`;
+    if (!window.confirm(message)) return;
+    const fullPath = `${folderPath}/${cleanPath}`;
     await remove(fullPath, { recursive: isDir });
-    if (!isDir) {
-      useTabsStore.getState().closeTabByPath(relativePath, folderPath);
+    for (const tab of affectedTabs) {
+      if (tab.relativePath) {
+        useTabsStore.getState().closeTabByPath(tab.relativePath, folderPath);
+      }
     }
     await refreshPaths();
   },
