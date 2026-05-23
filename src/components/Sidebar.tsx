@@ -1,4 +1,4 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useFileTree, FileTree } from "@pierre/trees/react";
 import { useWorkspaceStore } from "../stores/workspaceStore";
 import { useTabsStore } from "../stores/tabsStore";
@@ -47,6 +47,13 @@ interface SidebarProps {
   theme: "dark" | "light";
 }
 
+interface PromptState {
+  message: string;
+  defaultValue: string;
+  onConfirm: (value: string) => void;
+  onCancel: () => void;
+}
+
 export default function Sidebar({
   folderPath,
   paths,
@@ -58,6 +65,24 @@ export default function Sidebar({
   const { createFile, createDir, renameEntry, deleteEntry } = useWorkspaceStore();
   const { persistSession } = useTabsStore();
   const newFileInputRef = useRef<HTMLInputElement | null>(null);
+  const [promptState, setPromptState] = useState<PromptState | null>(null);
+
+  const showPrompt = useCallback((message: string, defaultValue = "") => {
+    return new Promise<string | null>((resolve) => {
+      setPromptState({
+        message,
+        defaultValue,
+        onConfirm: (value) => {
+          setPromptState(null);
+          resolve(value);
+        },
+        onCancel: () => {
+          setPromptState(null);
+          resolve(null);
+        },
+      });
+    });
+  }, []);
 
   const folderName = folderPath ? folderPath.split("/").pop() || folderPath : null;
 
@@ -73,27 +98,27 @@ export default function Sidebar({
 
   const handleNewFile = useCallback(async () => {
     if (!folderPath) return;
-    const name = prompt("新規ファイル名:");
+    const name = await showPrompt("新規ファイル名:");
     if (!name?.trim()) return;
     const fileName = name.trim().includes(".") ? name.trim() : `${name.trim()}.md`;
     await createFile(getSelectedDir(), fileName);
-  }, [folderPath, getSelectedDir, createFile]);
+  }, [folderPath, getSelectedDir, createFile, showPrompt]);
 
   const handleNewFolder = useCallback(async () => {
     if (!folderPath) return;
-    const name = prompt("新規フォルダ名:");
+    const name = await showPrompt("新規フォルダ名:");
     if (!name?.trim()) return;
     await createDir(getSelectedDir(), name.trim());
-  }, [folderPath, getSelectedDir, createDir]);
+  }, [folderPath, getSelectedDir, createDir, showPrompt]);
 
   const handleRename = useCallback(async () => {
     if (!selectedFile) return;
     const baseName = selectedFile.replace(/\/$/, "").split("/").pop() ?? "";
-    const newName = prompt("新しい名前:", baseName);
+    const newName = await showPrompt("新しい名前:", baseName);
     if (!newName?.trim() || newName.trim() === baseName) return;
     await renameEntry(selectedFile, newName.trim());
     if (folderPath) persistSession(folderPath);
-  }, [selectedFile, renameEntry, folderPath, persistSession]);
+  }, [selectedFile, renameEntry, folderPath, persistSession, showPrompt]);
 
   const handleDelete = useCallback(async () => {
     if (!selectedFile) return;
@@ -156,6 +181,14 @@ export default function Sidebar({
         ) : null}
       </div>
       <input ref={newFileInputRef} style={{ display: "none" }} />
+      {promptState && (
+        <InputPromptModal
+          message={promptState.message}
+          defaultValue={promptState.defaultValue}
+          onConfirm={promptState.onConfirm}
+          onCancel={promptState.onCancel}
+        />
+      )}
     </aside>
   );
 }
@@ -264,5 +297,59 @@ function DeleteIcon() {
       <polyline points="3 6 5 6 21 6" />
       <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
     </svg>
+  );
+}
+
+interface InputPromptModalProps {
+  message: string;
+  defaultValue: string;
+  onConfirm: (value: string) => void;
+  onCancel: () => void;
+}
+
+function InputPromptModal({ message, defaultValue, onConfirm, onCancel }: InputPromptModalProps) {
+  const [value, setValue] = useState(defaultValue);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Auto-focus and select all on mount
+  const handleMount = useCallback((el: HTMLInputElement | null) => {
+    if (!el) return;
+    (inputRef as React.MutableRefObject<HTMLInputElement | null>).current = el;
+    el.focus();
+    el.select();
+  }, []);
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      onConfirm(value);
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      onCancel();
+    }
+  };
+
+  return (
+    <div className="prompt-backdrop" onClick={onCancel}>
+      <div className="prompt-modal" onClick={(e) => e.stopPropagation()}>
+        <p className="prompt-message">{message}</p>
+        <input
+          ref={handleMount}
+          className="prompt-input"
+          type="text"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          onKeyDown={handleKeyDown}
+        />
+        <div className="prompt-actions">
+          <button className="prompt-btn prompt-btn-cancel" onClick={onCancel}>
+            キャンセル
+          </button>
+          <button className="prompt-btn prompt-btn-confirm" onClick={() => onConfirm(value)}>
+            OK
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
