@@ -12,6 +12,7 @@ import { useTabsStore } from "./stores/tabsStore";
 import { useUiStore } from "./stores/uiStore";
 import { useSettingsStore } from "./stores/settingsStore";
 import { useAutoSave } from "./hooks/useAutoSave";
+import { useScrollSync } from "./hooks/useScrollSync";
 import "./App.css";
 
 function isMarkdown(path: string) {
@@ -32,13 +33,14 @@ function App() {
   } = useTabsStore();
   const { theme, viewMode, isSettingsOpen, toggleTheme, setViewMode, setIsSettingsOpen } =
     useUiStore();
-  const { fontEditor, fontPreview } = useSettingsStore();
+  const { fontEditor, fontPreview, scrollSync } = useSettingsStore();
 
   const activeTab = getActiveTab();
   const selectedFile = activeTab?.relativePath ?? null;
   const isDirty = activeTab ? activeTab.content !== activeTab.savedContent : false;
 
   useAutoSave();
+  useScrollSync(viewMode === "split" && scrollSync);
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
