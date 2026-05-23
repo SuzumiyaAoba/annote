@@ -41,7 +41,7 @@ export default function ExportMenu() {
         }
       })
       .join("\n")
-      .replace(/<\/style/gi, "");
+      .replace(/<\/style/gi, "<\\/style");
 
     const html = `<!DOCTYPE html>
 <html lang="ja">

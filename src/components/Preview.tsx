@@ -158,9 +158,14 @@ export default function Preview({ content, theme }: PreviewProps) {
     headingIndexRef.current = 0;
     const makeHeading = (Tag: "h1" | "h2" | "h3" | "h4" | "h5" | "h6") =>
       function Heading({ children, ...props }: React.HTMLAttributes<HTMLHeadingElement>) {
-        const id = headingIdsRef.current[headingIndexRef.current++] ?? "";
+        // useRef ensures the index is consumed exactly once per component instance,
+        // preventing StrictMode's double-invocation from advancing the counter twice.
+        const idRef = useRef<string | null>(null);
+        if (idRef.current === null) {
+          idRef.current = headingIdsRef.current[headingIndexRef.current++] ?? "";
+        }
         return (
-          <Tag {...props} id={id} data-heading-id={id}>
+          <Tag {...props} id={idRef.current} data-heading-id={idRef.current}>
             {children}
           </Tag>
         );

@@ -9,9 +9,16 @@ export interface TocHeading {
 export function extractHeadings(markdown: string): TocHeading[] {
   const lines = markdown.split("\n");
   const counters: Record<string, number> = {};
+  let inFence = false;
   return lines
     .map((line) => {
-      const match = /^(#{1,4})\s+(.+)$/.exec(line.trim());
+      const trimmed = line.trim();
+      if (/^(`{3,}|~{3,})/.test(trimmed)) {
+        inFence = !inFence;
+        return null;
+      }
+      if (inFence) return null;
+      const match = /^(#{1,4})\s+(.+)$/.exec(trimmed);
       if (!match) return null;
       const level = match[1].length;
       const text = match[2].replace(/[*_`~\[\]]/g, "").trim();
