@@ -13,10 +13,7 @@ export default function StatusBar() {
   const activeTab = useTabsStore((s) => s.tabs.find((t) => t.id === s.activeId) ?? null);
   const isSaving = useTabsStore((s) => s.isSaving);
 
-  const stats = useMemo(
-    () => (activeTab ? countStats(activeTab.content) : null),
-    [activeTab]
-  );
+  const stats = useMemo(() => (activeTab ? countStats(activeTab.content) : null), [activeTab]);
 
   if (!activeTab) return null;
 
@@ -28,11 +25,17 @@ export default function StatusBar() {
       <div className="status-bar-right">
         {stats && (
           <>
-            <span className="status-item" title="行数">{stats.lines}行</span>
+            <span className="status-item" title="行数">
+              {stats.lines}行
+            </span>
             <span className="status-sep">·</span>
-            <span className="status-item" title="単語数">{stats.words}語</span>
+            <span className="status-item" title="単語数">
+              {stats.words}語
+            </span>
             <span className="status-sep">·</span>
-            <span className="status-item" title="文字数">{stats.chars}文字</span>
+            <span className="status-item" title="文字数">
+              {stats.chars}文字
+            </span>
           </>
         )}
       </div>

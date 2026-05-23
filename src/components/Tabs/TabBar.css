@@ -44,7 +44,9 @@
   user-select: none;
   color: var(--text-muted);
   font-size: 12px;
-  transition: background 0.1s, color 0.1s;
+  transition:
+    background 0.1s,
+    color 0.1s;
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -90,7 +92,10 @@
   padding: 0;
   flex-shrink: 0;
   opacity: 0;
-  transition: opacity 0.15s, background 0.15s, color 0.15s;
+  transition:
+    opacity 0.15s,
+    background 0.15s,
+    color 0.15s;
 }
 
 .tab-item:hover .tab-close,

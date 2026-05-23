@@ -86,8 +86,7 @@ export const useTabsStore = create<TabsStore>()((set, get) => ({
     const nextTabs = tabs.filter((t) => t.id !== id);
     let nextActiveId: string | null = activeId;
     if (activeId === id) {
-      nextActiveId =
-        nextTabs[idx]?.id ?? nextTabs[idx - 1]?.id ?? null;
+      nextActiveId = nextTabs[idx]?.id ?? nextTabs[idx - 1]?.id ?? null;
     }
     set({ tabs: nextTabs, activeId: nextActiveId });
   },
@@ -105,9 +104,7 @@ export const useTabsStore = create<TabsStore>()((set, get) => ({
     try {
       await writeTextFile(tab.fullPath, tab.content);
       set((s) => ({
-        tabs: s.tabs.map((t) =>
-          t.id === id ? { ...t, savedContent: t.content } : t
-        ),
+        tabs: s.tabs.map((t) => (t.id === id ? { ...t, savedContent: t.content } : t)),
       }));
     } finally {
       set({ isSaving: false });
@@ -135,10 +132,7 @@ export const useTabsStore = create<TabsStore>()((set, get) => ({
   newTab: () => {
     const id = nanoid();
     set((s) => ({
-      tabs: [
-        ...s.tabs,
-        { id, relativePath: null, fullPath: null, content: "", savedContent: "" },
-      ],
+      tabs: [...s.tabs, { id, relativePath: null, fullPath: null, content: "", savedContent: "" }],
       activeId: id,
     }));
   },
@@ -186,8 +180,7 @@ export const useTabsStore = create<TabsStore>()((set, get) => ({
     try {
       const raw = localStorage.getItem(sessionKey(folderPath));
       if (!raw) return;
-      const session: { paths: string[]; activeRelativePath: string | null } =
-        JSON.parse(raw);
+      const session: { paths: string[]; activeRelativePath: string | null } = JSON.parse(raw);
       if (!Array.isArray(session.paths)) return;
 
       const loaded: TabState[] = [];
@@ -208,9 +201,9 @@ export const useTabsStore = create<TabsStore>()((set, get) => ({
       }
 
       const activeId =
-        loaded.find(
-          (t) => t.relativePath === session.activeRelativePath
-        )?.id ?? loaded[0]?.id ?? null;
+        loaded.find((t) => t.relativePath === session.activeRelativePath)?.id ??
+        loaded[0]?.id ??
+        null;
 
       set({ tabs: loaded, activeId });
     } catch (err) {

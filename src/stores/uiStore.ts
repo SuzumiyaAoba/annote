@@ -26,8 +26,7 @@ export const useUiStore = create<UiState>()(
       theme: getInitialTheme(),
       viewMode: "split",
       isSettingsOpen: false,
-      toggleTheme: () =>
-        set((s) => ({ theme: s.theme === "dark" ? "light" : "dark" })),
+      toggleTheme: () => set((s) => ({ theme: s.theme === "dark" ? "light" : "dark" })),
       setTheme: (v) => set({ theme: v }),
       setViewMode: (v) => set({ viewMode: v }),
       setIsSettingsOpen: (v) => set({ isSettingsOpen: v }),
@@ -35,6 +34,6 @@ export const useUiStore = create<UiState>()(
     {
       name: "annote-ui",
       partialize: (s) => ({ theme: s.theme }),
-    }
-  )
+    },
+  ),
 );

@@ -5,8 +5,7 @@ import TabItem from "./TabItem";
 import "./TabBar.css";
 
 export default function TabBar() {
-  const { tabs, activeId, closeTab, setActiveId, reorderTabs, persistSession } =
-    useTabsStore();
+  const { tabs, activeId, closeTab, setActiveId, reorderTabs, persistSession } = useTabsStore();
   const folderPath = useWorkspaceStore((s) => s.folderPath);
   const dragFromRef = useRef<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
@@ -26,10 +25,7 @@ export default function TabBar() {
   return (
     <div className="tab-bar">
       {tabs.map((tab, index) => (
-        <div
-          key={tab.id}
-          className={`tab-wrapper ${dragOverIndex === index ? "drag-over" : ""}`}
-        >
+        <div key={tab.id} className={`tab-wrapper ${dragOverIndex === index ? "drag-over" : ""}`}>
           <TabItem
             tab={tab}
             isActive={tab.id === activeId}

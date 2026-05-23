@@ -66,7 +66,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
     },
-    [onClose]
+    [onClose],
   );
 
   useEffect(() => {
@@ -111,7 +111,9 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             description="Markdown プレビュー本文で使用するフォント"
             value={fontPreview}
             presets={PREVIEW_PRESETS}
-            previewText={"The quick brown fox jumps over the lazy dog.\nいろはにほへと ちりぬるを わかよたれそ"}
+            previewText={
+              "The quick brown fox jumps over the lazy dog.\nいろはにほへと ちりぬるを わかよたれそ"
+            }
             monospace={false}
             onChange={setFontPreview}
           />
@@ -218,7 +220,7 @@ function FontSetting({
       const trimmed = v.trim();
       if (trimmed) onChange(trimmed);
     },
-    [onChange]
+    [onChange],
   );
 
   return (
@@ -259,10 +261,7 @@ function FontSetting({
         />
       </div>
 
-      <div
-        className="font-preview"
-        style={{ fontFamily: value, ...(monospace ? {} : {}) }}
-      >
+      <div className="font-preview" style={{ fontFamily: value, ...(monospace ? {} : {}) }}>
         {previewText.split("\n").map((line, i) => (
           <div key={i}>{line}</div>
         ))}
@@ -273,7 +272,15 @@ function FontSetting({
 
 function CloseIcon() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+    >
       <line x1="18" y1="6" x2="6" y2="18" />
       <line x1="6" y1="6" x2="18" y2="18" />
     </svg>

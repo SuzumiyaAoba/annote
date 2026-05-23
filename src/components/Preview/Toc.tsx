@@ -34,7 +34,7 @@ export function extractHeadings(markdown: string): TocHeading[] {
       const match = /^(#{1,4})\s+(.+)$/.exec(trimmed);
       if (!match) return null;
       const level = match[1].length;
-      const text = match[2].replace(/[*_`~\[\]]/g, "").trim();
+      const text = match[2].replace(/[*_`~[\]]/g, "").trim();
       const baseId = text
         .toLowerCase()
         .replace(/\s+/g, "-")
@@ -74,11 +74,7 @@ export default function Toc({ headings, previewRef }: TocProps) {
             className="toc-item"
             style={{ paddingLeft: `${(h.level - minLevel) * 12}px` }}
           >
-            <button
-              className="toc-link"
-              title={h.text}
-              onClick={() => handleClick(h.id)}
-            >
+            <button className="toc-link" title={h.text} onClick={() => handleClick(h.id)}>
               {h.text}
             </button>
           </li>

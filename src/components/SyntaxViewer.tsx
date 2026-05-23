@@ -45,7 +45,7 @@ export default function SyntaxViewer({ content, fileName, theme, fontFamily }: S
         ".cm-scroller": { fontFamily },
         ".cm-content": { fontFamily },
       }),
-    [fontFamily]
+    [fontFamily],
   );
 
   const extensions = useMemo(
@@ -56,14 +56,12 @@ export default function SyntaxViewer({ content, fileName, theme, fontFamily }: S
       fontTheme,
       ...(langSupport ? [langSupport] : []),
     ],
-    [langSupport, fontTheme]
+    [langSupport, fontTheme],
   );
 
   return (
     <div className="syntax-viewer">
-      <div className="syntax-viewer-lang-label">
-        {getLangLabel(fileName)}
-      </div>
+      <div className="syntax-viewer-lang-label">{getLangLabel(fileName)}</div>
       <CodeMirror
         value={content}
         extensions={extensions}
@@ -87,16 +85,32 @@ export default function SyntaxViewer({ content, fileName, theme, fontFamily }: S
 function getLangLabel(fileName: string): string {
   const ext = fileName.split(".").pop()?.toLowerCase() ?? "";
   const labels: Record<string, string> = {
-    md: "Markdown", markdown: "Markdown",
-    ts: "TypeScript", tsx: "TypeScript (JSX)",
-    js: "JavaScript", jsx: "JavaScript (JSX)",
-    rs: "Rust", py: "Python", go: "Go",
-    json: "JSON", toml: "TOML", yaml: "YAML", yml: "YAML",
-    html: "HTML", css: "CSS", scss: "SCSS",
-    sh: "Shell", bash: "Shell",
-    sql: "SQL", xml: "XML",
-    c: "C", cpp: "C++", java: "Java", kt: "Kotlin",
-    rb: "Ruby", swift: "Swift",
+    md: "Markdown",
+    markdown: "Markdown",
+    ts: "TypeScript",
+    tsx: "TypeScript (JSX)",
+    js: "JavaScript",
+    jsx: "JavaScript (JSX)",
+    rs: "Rust",
+    py: "Python",
+    go: "Go",
+    json: "JSON",
+    toml: "TOML",
+    yaml: "YAML",
+    yml: "YAML",
+    html: "HTML",
+    css: "CSS",
+    scss: "SCSS",
+    sh: "Shell",
+    bash: "Shell",
+    sql: "SQL",
+    xml: "XML",
+    c: "C",
+    cpp: "C++",
+    java: "Java",
+    kt: "Kotlin",
+    rb: "Ruby",
+    swift: "Swift",
   };
   return labels[ext] ?? (ext.toUpperCase() || "Plain Text");
 }

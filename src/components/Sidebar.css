@@ -36,7 +36,9 @@
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  transition: background 0.12s, color 0.12s;
+  transition:
+    background 0.12s,
+    color 0.12s;
 }
 
 .sidebar-action-btn:hover {
@@ -45,7 +47,7 @@
 }
 
 .sidebar-action-danger:hover {
-  background: var(--danger)22;
+  background: var(--danger) 22;
   color: var(--danger);
 }
 
@@ -58,7 +60,7 @@
   border-radius: 4px;
   font-size: 13px;
   outline: none;
-  box-shadow: 0 0 0 2px var(--accent)33;
+  box-shadow: 0 0 0 2px var(--accent) 33;
 }
 
 .folder-name-btn,
@@ -76,7 +78,9 @@
   font-size: 12px;
   font-weight: 600;
   text-align: left;
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
   overflow: hidden;
 }
 

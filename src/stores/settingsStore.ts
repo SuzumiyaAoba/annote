@@ -18,8 +18,7 @@ export interface SettingsState {
   setTocOpen: (v: boolean) => void;
 }
 
-const DEFAULT_FONT_EDITOR =
-  '"JetBrains Mono", "Fira Code", "Cascadia Code", Consolas, monospace';
+const DEFAULT_FONT_EDITOR = '"JetBrains Mono", "Fira Code", "Cascadia Code", Consolas, monospace';
 const DEFAULT_FONT_PREVIEW =
   '-apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif';
 
@@ -41,6 +40,6 @@ export const useSettingsStore = create<SettingsState>()(
     }),
     {
       name: "annote-settings",
-    }
-  )
+    },
+  ),
 );

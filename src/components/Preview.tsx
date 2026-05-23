@@ -192,7 +192,11 @@ export default function Preview({ content, theme }: PreviewProps) {
             </a>
           );
         }
-        return <a href={href} {...props}>{children}</a>;
+        return (
+          <a href={href} {...props}>
+            {children}
+          </a>
+        );
       },
       img({ src, alt, ...props }) {
         const resolved = src ? resolveImageSrc(src) : src;
@@ -201,12 +205,7 @@ export default function Preview({ content, theme }: PreviewProps) {
       code({ className, children, ...props }) {
         const lang = /language-(\w+)/.exec(className ?? "")?.[1];
         if (lang === "mermaid") {
-          return (
-            <MermaidDiagram
-              code={String(children).replace(/\n$/, "")}
-              theme={theme}
-            />
-          );
+          return <MermaidDiagram code={String(children).replace(/\n$/, "")} theme={theme} />;
         }
         if (lang === "tikz") {
           return <TikzDiagram code={String(children).replace(/\n$/, "")} />;
@@ -234,20 +233,12 @@ export default function Preview({ content, theme }: PreviewProps) {
           </ReactMarkdown>
         </div>
       </div>
-      {tocOpen && headings.length > 0 && (
-        <Toc headings={headings} previewRef={bodyRef} />
-      )}
+      {tocOpen && headings.length > 0 && <Toc headings={headings} previewRef={bodyRef} />}
     </div>
   );
 }
 
-function MermaidDiagram({
-  code,
-  theme,
-}: {
-  code: string;
-  theme: "dark" | "light";
-}) {
+function MermaidDiagram({ code, theme }: { code: string; theme: "dark" | "light" }) {
   const [svg, setSvg] = useState("");
   const [error, setError] = useState("");
   const uid = useId();
@@ -256,9 +247,7 @@ function MermaidDiagram({
   useEffect(() => {
     let cancelled = false;
 
-    mermaid.initialize(
-      theme === "dark" ? MERMAID_CONFIG_DARK : MERMAID_CONFIG_LIGHT
-    );
+    mermaid.initialize(theme === "dark" ? MERMAID_CONFIG_DARK : MERMAID_CONFIG_LIGHT);
 
     mermaid
       .render(id, code)
@@ -288,12 +277,7 @@ function MermaidDiagram({
     );
   }
 
-  return (
-    <div
-      className="mermaid-diagram"
-      dangerouslySetInnerHTML={{ __html: svg }}
-    />
-  );
+  return <div className="mermaid-diagram" dangerouslySetInnerHTML={{ __html: svg }} />;
 }
 
 function TikzDiagram({ code }: { code: string }) {
@@ -337,7 +321,10 @@ function TikzDiagram({ code }: { code: string }) {
     }, 60_000);
 
     const pollId = setInterval(() => {
-      if (cancelled) { clearInterval(pollId); return; }
+      if (cancelled) {
+        clearInterval(pollId);
+        return;
+      }
       try {
         const svg = iframe.contentDocument?.querySelector("svg");
         if (svg) {
@@ -354,7 +341,9 @@ function TikzDiagram({ code }: { code: string }) {
           }
           if (document.body.contains(iframe)) document.body.removeChild(iframe);
         }
-      } catch { /* cross-origin access error */ }
+      } catch {
+        /* cross-origin access error */
+      }
     }, 500);
 
     return () => {
@@ -371,14 +360,14 @@ function TikzDiagram({ code }: { code: string }) {
   if (error) {
     return (
       <div className="tikz-error">
-        <pre><code>{code}</code></pre>
+        <pre>
+          <code>{code}</code>
+        </pre>
         <p className="tikz-error-msg">{error}</p>
       </div>
     );
   }
-  return (
-    <div className="tikz-diagram" dangerouslySetInnerHTML={{ __html: svgHtml }} />
-  );
+  return <div className="tikz-diagram" dangerouslySetInnerHTML={{ __html: svgHtml }} />;
 }
 
 function parseFrontmatter(raw: string): {

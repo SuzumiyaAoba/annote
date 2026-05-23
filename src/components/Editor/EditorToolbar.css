@@ -28,7 +28,9 @@
   cursor: pointer;
   font-size: 11px;
   font-weight: 600;
-  transition: background 0.12s, color 0.12s;
+  transition:
+    background 0.12s,
+    color 0.12s;
 }
 
 .toolbar-format-btn:hover {
