@@ -1,122 +1,86 @@
-import { useState, useCallback, useEffect } from "react";
-import { open } from "@tauri-apps/plugin-dialog";
-import { readTextFile, writeTextFile } from "@tauri-apps/plugin-fs";
-import { invoke } from "@tauri-apps/api/core";
+import { useCallback, useEffect } from "react";
 import Sidebar from "./components/Sidebar";
 import Editor from "./components/Editor";
 import Preview from "./components/Preview";
 import SyntaxViewer from "./components/SyntaxViewer";
-import SettingsModal, { AppSettings, DEFAULT_SETTINGS } from "./components/Settings";
+import SettingsModal from "./components/Settings";
+import TabBar from "./components/Tabs/TabBar";
+import StatusBar from "./components/StatusBar";
+import ExportMenu from "./components/ExportMenu";
+import { useWorkspaceStore } from "./stores/workspaceStore";
+import { useTabsStore } from "./stores/tabsStore";
+import { useUiStore } from "./stores/uiStore";
+import { useSettingsStore } from "./stores/settingsStore";
+import { useAutoSave } from "./hooks/useAutoSave";
 import "./App.css";
 
 function isMarkdown(path: string) {
   return /\.(md|markdown)$/i.test(path);
 }
 
-type ViewMode = "edit" | "preview" | "split";
-type Theme = "dark" | "light";
-
-function getInitialTheme(): Theme {
-  const stored = localStorage.getItem("theme");
-  if (stored === "dark" || stored === "light") return stored;
-  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-}
-
-function getInitialSettings(): AppSettings {
-  try {
-    const stored = localStorage.getItem("settings");
-    if (stored) return { ...DEFAULT_SETTINGS, ...JSON.parse(stored) };
-  } catch {}
-  return DEFAULT_SETTINGS;
-}
-
 function App() {
-  const [folderPath, setFolderPath] = useState<string | null>(null);
-  const [paths, setPaths] = useState<string[]>([]);
-  const [selectedFile, setSelectedFile] = useState<string | null>(null);
-  const [content, setContent] = useState("");
-  const [isDirty, setIsDirty] = useState(false);
-  const [viewMode, setViewMode] = useState<ViewMode>("split");
-  const [isSaving, setIsSaving] = useState(false);
-  const [theme, setTheme] = useState<Theme>(getInitialTheme);
-  const [settings, setSettings] = useState<AppSettings>(getInitialSettings);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const { folderPath, paths, openFolder } = useWorkspaceStore();
+  const {
+    tabs,
+    activeId,
+    isSaving,
+    openFile,
+    setContent,
+    saveActiveTab,
+    getActiveTab,
+    persistSession,
+  } = useTabsStore();
+  const { theme, viewMode, isSettingsOpen, toggleTheme, setViewMode, setIsSettingsOpen } =
+    useUiStore();
+  const { fontEditor, fontPreview } = useSettingsStore();
+
+  const activeTab = getActiveTab();
+  const selectedFile = activeTab?.relativePath ?? null;
+  const isDirty = activeTab ? activeTab.content !== activeTab.savedContent : false;
+
+  useAutoSave();
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
-    localStorage.setItem("theme", theme);
   }, [theme]);
 
   useEffect(() => {
-    document.documentElement.style.setProperty("--font-editor", settings.fontEditor);
-    document.documentElement.style.setProperty("--font-preview", settings.fontPreview);
-    localStorage.setItem("settings", JSON.stringify(settings));
-  }, [settings]);
+    document.documentElement.style.setProperty("--font-editor", fontEditor);
+  }, [fontEditor]);
 
-  const toggleTheme = useCallback(() => {
-    setTheme((t) => (t === "dark" ? "light" : "dark"));
-  }, []);
+  useEffect(() => {
+    document.documentElement.style.setProperty("--font-preview", fontPreview);
+  }, [fontPreview]);
 
-  const openFolder = useCallback(async () => {
-    const selected = await open({ directory: true, multiple: false });
-    if (typeof selected === "string") {
-      const dirPaths = await invoke<string[]>("get_dir_paths", { dirPath: selected });
-      // invoke の後にまとめて更新することで React バッチングにより
-      // FileTreeView が正しい paths で一度だけ再マウントされる
-      setFolderPath(selected);
-      setSelectedFile(null);
-      setContent("");
-      setIsDirty(false);
-      setPaths(dirPaths);
-    }
-  }, []);
+  const handleContentChange = useCallback(
+    (value: string) => {
+      if (!activeId) return;
+      setContent(activeId, value);
+    },
+    [activeId, setContent]
+  );
 
   const handleFileSelect = useCallback(
     async (relativePath: string) => {
       if (!folderPath) return;
-      if (isDirty && selectedFile) {
-        const confirmed = window.confirm("変更を破棄しますか？");
-        if (!confirmed) return;
-      }
-      if (relativePath.endsWith("/")) return;
-      const fullPath = `${folderPath}/${relativePath}`;
-      try {
-        const text = await readTextFile(fullPath);
-        setSelectedFile(relativePath);
-        setContent(text);
-        setIsDirty(false);
-      } catch (err) {
-        console.error("ファイル読み込みエラー:", fullPath, err);
-      }
+      await openFile(folderPath, relativePath);
+      persistSession(folderPath);
     },
-    [folderPath, isDirty, selectedFile]
+    [folderPath, openFile, persistSession]
   );
 
-  const handleContentChange = useCallback((value: string) => {
-    setContent(value);
-    setIsDirty(true);
-  }, []);
-
-  const saveFile = useCallback(async () => {
-    if (!folderPath || !selectedFile) return;
-    setIsSaving(true);
-    try {
-      const fullPath = `${folderPath}/${selectedFile}`;
-      await writeTextFile(fullPath, content);
-      setIsDirty(false);
-    } finally {
-      setIsSaving(false);
-    }
-  }, [folderPath, selectedFile, content]);
+  const handleSave = useCallback(() => {
+    saveActiveTab();
+  }, [saveActiveTab]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "s") {
         e.preventDefault();
-        saveFile();
+        handleSave();
       }
     },
-    [saveFile]
+    [handleSave]
   );
 
   return (
@@ -164,7 +128,7 @@ function App() {
           {selectedFile && (
             <button
               className={`toolbar-btn save-btn ${isSaving ? "saving" : ""} ${isDirty ? "dirty" : ""}`}
-              onClick={saveFile}
+              onClick={handleSave}
               disabled={isSaving || !isDirty}
               title="保存 (⌘S)"
             >
@@ -179,6 +143,8 @@ function App() {
           >
             {theme === "dark" ? <SunIcon /> : <MoonIcon />}
           </button>
+
+          {selectedFile && <ExportMenu />}
 
           <button
             className="toolbar-btn theme-btn"
@@ -200,68 +166,70 @@ function App() {
           theme={theme}
         />
 
-        <div className="content-area">
-          {selectedFile ? (
-            <>
-              {(viewMode === "edit" || viewMode === "split") && (
-                <div className={`editor-pane ${viewMode === "split" ? "split" : "full"}`}>
-                  <Editor
-                    value={content}
-                    onChange={handleContentChange}
-                    theme={theme}
-                    fontFamily={settings.fontEditor}
-                  />
+        <div className="editor-area">
+          <TabBar />
+
+          <div className="content-area">
+            {tabs.length === 0 ? (
+              <div className="empty-state">
+                <div className="empty-state-icon">
+                  <NoteIcon />
                 </div>
-              )}
-              {viewMode === "split" && (
-                <div className="preview-pane split">
-                  {isMarkdown(selectedFile) ? (
-                    <Preview content={content} theme={theme} />
-                  ) : (
-                    <SyntaxViewer
-                      content={content}
-                      fileName={selectedFile}
-                      theme={theme}
-                      fontFamily={settings.fontEditor}
-                    />
-                  )}
-                </div>
-              )}
-              {viewMode === "preview" && (
-                <div className="preview-pane full">
-                  {isMarkdown(selectedFile) ? (
-                    <Preview content={content} theme={theme} />
-                  ) : (
-                    <SyntaxViewer
-                      content={content}
-                      fileName={selectedFile}
-                      theme={theme}
-                      fontFamily={settings.fontEditor}
-                    />
-                  )}
-                </div>
-              )}
-            </>
-          ) : (
-            <div className="empty-state">
-              <div className="empty-state-icon">
-                <NoteIcon />
+                <p>
+                  {folderPath
+                    ? "サイドバーからファイルを選択してください"
+                    : "「フォルダを開く」からノートフォルダを選択してください"}
+                </p>
               </div>
-              <p>
-                {folderPath
-                  ? "サイドバーからファイルを選択してください"
-                  : "「フォルダを開く」からノートフォルダを選択してください"}
-              </p>
-            </div>
-          )}
+            ) : (
+              tabs.map((tab) => {
+                const isActive = tab.id === activeId;
+                const tabIsMarkdown = tab.relativePath
+                  ? isMarkdown(tab.relativePath)
+                  : false;
+
+                return (
+                  <div
+                    key={tab.id}
+                    className={`tab-content${isActive ? "" : " tab-hidden"}`}
+                  >
+                    {(viewMode === "edit" || viewMode === "split") && (
+                      <div className={`editor-pane ${viewMode === "split" ? "split" : "full"}`}>
+                        <Editor
+                          value={tab.content}
+                          onChange={isActive ? handleContentChange : () => {}}
+                          theme={theme}
+                          fontFamily={fontEditor}
+                        />
+                      </div>
+                    )}
+                    {viewMode !== "edit" && (
+                      <div className={`preview-pane ${viewMode === "split" ? "split" : "full"}`}>
+                        {tabIsMarkdown ? (
+                          <Preview content={tab.content} theme={theme} />
+                        ) : (
+                          <SyntaxViewer
+                            content={tab.content}
+                            fileName={tab.relativePath ?? ""}
+                            theme={theme}
+                            fontFamily={fontEditor}
+                          />
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })
+            )}
+          </div>
         </div>
       </div>
+
+      <StatusBar />
 
       <SettingsModal
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
-        settings={settings}
-        onChange={setSettings}
       />
     </div>
   );

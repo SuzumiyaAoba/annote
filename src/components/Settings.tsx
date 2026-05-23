@@ -1,17 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
+import { useSettingsStore, KeymapMode } from "../stores/settingsStore";
 import "./Settings.css";
-
-export interface AppSettings {
-  fontEditor: string;
-  fontPreview: string;
-}
-
-export const DEFAULT_SETTINGS: AppSettings = {
-  fontEditor:
-    '"JetBrains Mono", "Fira Code", "Cascadia Code", Consolas, monospace',
-  fontPreview:
-    '-apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif',
-};
 
 const EDITOR_PRESETS = [
   { label: "JetBrains Mono", value: '"JetBrains Mono", monospace' },
@@ -39,19 +28,40 @@ const PREVIEW_PRESETS = [
   },
 ];
 
+const KEYMAP_OPTIONS: { label: string; value: KeymapMode }[] = [
+  { label: "標準", value: "default" },
+  { label: "Vim", value: "vim" },
+  { label: "Emacs", value: "emacs" },
+];
+
+const AUTOSAVE_OPTIONS = [
+  { label: "OFF", value: 0 },
+  { label: "300ms", value: 300 },
+  { label: "800ms (既定)", value: 800 },
+  { label: "2s", value: 2000 },
+];
+
 interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  settings: AppSettings;
-  onChange: (settings: AppSettings) => void;
 }
 
-export default function SettingsModal({
-  isOpen,
-  onClose,
-  settings,
-  onChange,
-}: SettingsModalProps) {
+export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
+  const {
+    fontEditor,
+    fontPreview,
+    keymap,
+    autosaveMs,
+    scrollSync,
+    tocOpen,
+    setFontEditor,
+    setFontPreview,
+    setKeymap,
+    setAutosaveMs,
+    setScrollSync,
+    setTocOpen,
+  } = useSettingsStore();
+
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -87,11 +97,11 @@ export default function SettingsModal({
           <FontSetting
             label="エディターフォント"
             description="エディター・シンタックスビューアーで使用するフォント"
-            value={settings.fontEditor}
+            value={fontEditor}
             presets={EDITOR_PRESETS}
             previewText={"const hello = 'world';\nfunction add(a, b) { return a + b; }"}
             monospace
-            onChange={(fontEditor) => onChange({ ...settings, fontEditor })}
+            onChange={setFontEditor}
           />
 
           <div className="settings-divider" />
@@ -99,12 +109,79 @@ export default function SettingsModal({
           <FontSetting
             label="プレビューフォント"
             description="Markdown プレビュー本文で使用するフォント"
-            value={settings.fontPreview}
+            value={fontPreview}
             presets={PREVIEW_PRESETS}
             previewText={"The quick brown fox jumps over the lazy dog.\nいろはにほへと ちりぬるを わかよたれそ"}
             monospace={false}
-            onChange={(fontPreview) => onChange({ ...settings, fontPreview })}
+            onChange={setFontPreview}
           />
+
+          <div className="settings-divider" />
+
+          <section className="settings-section">
+            <div className="settings-section-header">
+              <span className="settings-section-label">キーバインド</span>
+              <span className="settings-section-description">エディターのキーバインドモード</span>
+            </div>
+            <div className="settings-option-row">
+              {KEYMAP_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  className={`preset-btn ${keymap === opt.value ? "active" : ""}`}
+                  onClick={() => setKeymap(opt.value)}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </section>
+
+          <div className="settings-divider" />
+
+          <section className="settings-section">
+            <div className="settings-section-header">
+              <span className="settings-section-label">自動保存</span>
+              <span className="settings-section-description">変更後の自動保存タイミング</span>
+            </div>
+            <div className="settings-option-row">
+              {AUTOSAVE_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  className={`preset-btn ${autosaveMs === opt.value ? "active" : ""}`}
+                  onClick={() => setAutosaveMs(opt.value)}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </section>
+
+          <div className="settings-divider" />
+
+          <section className="settings-section">
+            <div className="settings-section-header">
+              <span className="settings-section-label">表示</span>
+              <span className="settings-section-description">プレビュー表示の設定</span>
+            </div>
+            <div className="settings-toggle-row">
+              <label className="settings-toggle-label">
+                <input
+                  type="checkbox"
+                  checked={scrollSync}
+                  onChange={(e) => setScrollSync(e.target.checked)}
+                />
+                スクロール同期
+              </label>
+              <label className="settings-toggle-label">
+                <input
+                  type="checkbox"
+                  checked={tocOpen}
+                  onChange={(e) => setTocOpen(e.target.checked)}
+                />
+                目次 (TOC) を表示
+              </label>
+            </div>
+          </section>
         </div>
       </div>
     </div>

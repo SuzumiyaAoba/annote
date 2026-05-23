@@ -199,11 +199,34 @@ body {
   overflow: hidden;
 }
 
+/* Editor area (tab bar + content) */
+.editor-area {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
 /* Content area */
 .content-area {
   display: flex;
   flex: 1;
   overflow: hidden;
+  position: relative;
+}
+
+/* Tab content — each tab occupies the full content area */
+.tab-content {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  overflow: hidden;
+}
+
+.tab-content.tab-hidden {
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .editor-pane,

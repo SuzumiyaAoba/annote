@@ -1,4 +1,4 @@
-import { useState, useEffect, useId, useMemo } from "react";
+import { useState, useEffect, useId, useMemo, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 import type { Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -7,12 +7,17 @@ import rehypeHighlight from "rehype-highlight";
 import rehypeKatex from "rehype-katex";
 import { load as parseYaml } from "js-yaml";
 import mermaid from "mermaid";
+import { openUrl } from "@tauri-apps/plugin-opener";
+import { convertFileSrc } from "@tauri-apps/api/core";
 import "katex/dist/katex.min.css";
 import "github-markdown-css/github-markdown-light.css";
 import "../styles/github-markdown-dark-scoped.css";
 import "highlight.js/styles/github.css";
 import "../styles/hljs-github-dark-scoped.css";
 import "./Preview.css";
+import Toc, { extractHeadings } from "./Preview/Toc";
+import { useSettingsStore } from "../stores/settingsStore";
+import { useWorkspaceStore } from "../stores/workspaceStore";
 
 interface PreviewProps {
   content: string;
@@ -123,9 +128,72 @@ const MERMAID_CONFIG_DARK = {
 export default function Preview({ content, theme }: PreviewProps) {
   const { data: frontmatter, body } = parseFrontmatter(content);
   const hasFrontmatter = Object.keys(frontmatter).length > 0;
+  const tocOpen = useSettingsStore((s) => s.tocOpen);
+  const folderPath = useWorkspaceStore((s) => s.folderPath);
+  const bodyRef = useRef<HTMLDivElement>(null);
 
-  const components = useMemo<Components>(
-    () => ({
+  const headings = useMemo(() => extractHeadings(body), [body]);
+
+  const resolveImageSrc = useMemo(() => {
+    return (src: string) => {
+      if (!src || /^https?:\/\//.test(src) || src.startsWith("data:")) return src;
+      if (folderPath) {
+        return convertFileSrc(`${folderPath}/${src}`);
+      }
+      return src;
+    };
+  }, [folderPath]);
+
+  const headingCounters = useRef<Record<string, number>>({});
+
+  const components = useMemo<Components>(() => {
+    headingCounters.current = {};
+    const makeHeading = (Tag: "h1" | "h2" | "h3" | "h4" | "h5" | "h6") =>
+      function Heading({ children, ...props }: React.HTMLAttributes<HTMLHeadingElement>) {
+        const text = String(children ?? "")
+          .replace(/[*_`~\[\]]/g, "")
+          .trim();
+        const baseId = text
+          .toLowerCase()
+          .replace(/\s+/g, "-")
+          .replace(/[^\w　-鿿-]/g, "");
+        headingCounters.current[baseId] = (headingCounters.current[baseId] ?? 0) + 1;
+        const count = headingCounters.current[baseId];
+        const id = count > 1 ? `${baseId}-${count}` : baseId;
+        return (
+          <Tag {...props} id={id} data-heading-id={id}>
+            {children}
+          </Tag>
+        );
+      };
+
+    return {
+      h1: makeHeading("h1"),
+      h2: makeHeading("h2"),
+      h3: makeHeading("h3"),
+      h4: makeHeading("h4"),
+      a({ href, children, ...props }) {
+        const isExternal = href && /^https?:\/\//.test(href);
+        if (isExternal) {
+          return (
+            <a
+              {...props}
+              href={href}
+              onClick={(e) => {
+                e.preventDefault();
+                openUrl(href).catch(console.error);
+              }}
+            >
+              {children}
+            </a>
+          );
+        }
+        return <a href={href} {...props}>{children}</a>;
+      },
+      img({ src, alt, ...props }) {
+        const resolved = src ? resolveImageSrc(src) : src;
+        return <img {...props} src={resolved} alt={alt} />;
+      },
       code({ className, children, ...props }) {
         const lang = /language-(\w+)/.exec(className ?? "")?.[1];
         if (lang === "mermaid") {
@@ -145,22 +213,26 @@ export default function Preview({ content, theme }: PreviewProps) {
           </code>
         );
       },
-    }),
-    [theme]
-  );
+    };
+  }, [theme, resolveImageSrc]);
 
   return (
-    <div className="preview-container">
-      {hasFrontmatter && <FrontmatterTable data={frontmatter} />}
-      <div className="markdown-body">
-        <ReactMarkdown
-          remarkPlugins={REMARK_PLUGINS}
-          rehypePlugins={REHYPE_PLUGINS}
-          components={components}
-        >
-          {body}
-        </ReactMarkdown>
+    <div className="preview-outer">
+      <div className="preview-container" ref={bodyRef}>
+        {hasFrontmatter && <FrontmatterTable data={frontmatter} />}
+        <div className="markdown-body">
+          <ReactMarkdown
+            remarkPlugins={REMARK_PLUGINS}
+            rehypePlugins={REHYPE_PLUGINS}
+            components={components}
+          >
+            {body}
+          </ReactMarkdown>
+        </div>
       </div>
+      {tocOpen && headings.length > 0 && (
+        <Toc headings={headings} previewRef={bodyRef} />
+      )}
     </div>
   );
 }

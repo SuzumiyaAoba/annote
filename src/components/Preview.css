@@ -1,3 +1,9 @@
+.preview-outer {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
 .preview-container {
   flex: 1;
   overflow-y: auto;
