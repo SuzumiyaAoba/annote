@@ -170,7 +170,7 @@ interface FileTreeViewProps {
 function FileTreeView({ paths, selectedFile, onFileSelect, theme }: FileTreeViewProps) {
   const { model } = useFileTree({
     paths,
-    initialExpansion: "open",
+    initialExpansion: "closed",
     initialSelectedPaths: selectedFile ? [selectedFile] : [],
     onSelectionChange: (selectedPaths) => {
       const path = selectedPaths[0];
