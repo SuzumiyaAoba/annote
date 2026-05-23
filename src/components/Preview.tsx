@@ -144,26 +144,21 @@ export default function Preview({ content, theme }: PreviewProps) {
     };
   }, [folderPath]);
 
-  const headingCounters = useRef<Record<string, number>>({});
+  const headingIdsRef = useRef<string[]>([]);
+  const headingIndexRef = useRef(0);
   const prevBodyRef = useRef<string>("");
   if (prevBodyRef.current !== body) {
     prevBodyRef.current = body;
-    headingCounters.current = {};
+    headingIdsRef.current = headings.map((h) => h.id);
+    headingIndexRef.current = 0;
   }
 
   const components = useMemo<Components>(() => {
+    // Reset index so heading components get the right ID after theme/resolveImageSrc change
+    headingIndexRef.current = 0;
     const makeHeading = (Tag: "h1" | "h2" | "h3" | "h4" | "h5" | "h6") =>
       function Heading({ children, ...props }: React.HTMLAttributes<HTMLHeadingElement>) {
-        const text = String(children ?? "")
-          .replace(/[*_`~\[\]]/g, "")
-          .trim();
-        const baseId = text
-          .toLowerCase()
-          .replace(/\s+/g, "-")
-          .replace(/[^\w　-鿿-]/g, "");
-        headingCounters.current[baseId] = (headingCounters.current[baseId] ?? 0) + 1;
-        const count = headingCounters.current[baseId];
-        const id = count > 1 ? `${baseId}-${count}` : baseId;
+        const id = headingIdsRef.current[headingIndexRef.current++] ?? "";
         return (
           <Tag {...props} id={id} data-heading-id={id}>
             {children}

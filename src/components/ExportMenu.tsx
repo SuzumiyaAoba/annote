@@ -40,7 +40,8 @@ export default function ExportMenu() {
           return "";
         }
       })
-      .join("\n");
+      .join("\n")
+      .replace(/<\/style/gi, "");
 
     const html = `<!DOCTYPE html>
 <html lang="ja">
