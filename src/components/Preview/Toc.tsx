@@ -9,15 +9,28 @@ export interface TocHeading {
 export function extractHeadings(markdown: string): TocHeading[] {
   const lines = markdown.split("\n");
   const counters: Record<string, number> = {};
-  let inFence = false;
+  // Track fence character and minimum closing length separately so that
+  // a backtick fence is never closed by a tilde line and vice versa (CommonMark §4.5).
+  let fenceChar: string | null = null;
+  let fenceLen = 0;
   return lines
     .map((line) => {
-      const trimmed = line.trim();
-      if (/^(`{3,}|~{3,})/.test(trimmed)) {
-        inFence = !inFence;
+      // CommonMark allows 0–3 spaces before a fence; 4+ spaces = indented code block (not a fence).
+      const fenceMatch = /^ {0,3}(`{3,}|~{3,})/.exec(line);
+      if (fenceMatch) {
+        const ch = fenceMatch[1][0];
+        const len = fenceMatch[1].length;
+        if (fenceChar === null) {
+          fenceChar = ch;
+          fenceLen = len;
+        } else if (ch === fenceChar && len >= fenceLen) {
+          fenceChar = null;
+          fenceLen = 0;
+        }
         return null;
       }
-      if (inFence) return null;
+      if (fenceChar !== null) return null;
+      const trimmed = line.trim();
       const match = /^(#{1,4})\s+(.+)$/.exec(trimmed);
       if (!match) return null;
       const level = match[1].length;
