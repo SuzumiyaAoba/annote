@@ -18,22 +18,26 @@ export default function StatusBar() {
   if (!activeTab) return null;
 
   return (
-    <div className="status-bar">
+    <div className="status-bar" data-testid="status-bar">
       <div className="status-bar-left">
-        {isSaving && <span className="status-saving">保存中…</span>}
+        {isSaving && (
+          <span className="status-saving" data-testid="status-saving">
+            保存中…
+          </span>
+        )}
       </div>
       <div className="status-bar-right">
         {stats && (
           <>
-            <span className="status-item" title="行数">
+            <span className="status-item" data-testid="status-lines" title="行数">
               {stats.lines}行
             </span>
             <span className="status-sep">·</span>
-            <span className="status-item" title="単語数">
+            <span className="status-item" data-testid="status-words" title="単語数">
               {stats.words}語
             </span>
             <span className="status-sep">·</span>
-            <span className="status-item" title="文字数">
+            <span className="status-item" data-testid="status-chars" title="文字数">
               {stats.chars}文字
             </span>
           </>

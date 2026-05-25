@@ -23,7 +23,7 @@ export default function TabBar() {
   };
 
   return (
-    <div className="tab-bar">
+    <div className="tab-bar" data-testid="tab-bar">
       {tabs.map((tab, index) => (
         <div key={tab.id} className={`tab-wrapper ${dragOverIndex === index ? "drag-over" : ""}`}>
           <TabItem

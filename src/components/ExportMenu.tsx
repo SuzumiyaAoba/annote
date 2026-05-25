@@ -67,19 +67,32 @@ ${previewEl.innerHTML}
   }, []);
 
   return (
-    <div className="export-menu-wrapper" ref={menuRef}>
-      <button className="toolbar-btn" title="エクスポート" onClick={() => setOpen((v) => !v)}>
+    <div className="export-menu-wrapper" data-testid="export-menu" ref={menuRef}>
+      <button
+        className="toolbar-btn"
+        data-testid="export-menu-btn"
+        title="エクスポート"
+        onClick={() => setOpen((v) => !v)}
+      >
         <ExportIcon />
       </button>
       {open && (
         <>
-          <div className="export-backdrop" onClick={() => setOpen(false)} />
-          <div className="export-dropdown">
-            <button className="export-item" onClick={handleExportHtml}>
+          <div
+            className="export-backdrop"
+            data-testid="export-backdrop"
+            onClick={() => setOpen(false)}
+          />
+          <div className="export-dropdown" data-testid="export-dropdown">
+            <button
+              className="export-item"
+              data-testid="export-html-btn"
+              onClick={handleExportHtml}
+            >
               <HtmlIcon />
               <span>HTML として書き出し</span>
             </button>
-            <button className="export-item" onClick={handlePrint}>
+            <button className="export-item" data-testid="export-print-btn" onClick={handlePrint}>
               <PrintIcon />
               <span>印刷 / PDF に保存</span>
             </button>

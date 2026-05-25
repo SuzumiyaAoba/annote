@@ -86,26 +86,32 @@ function App() {
   );
 
   return (
-    <div className="app" onKeyDown={handleKeyDown} tabIndex={-1}>
-      <header className="toolbar">
-        <button className="toolbar-btn" onClick={openFolder} title="フォルダを開く">
+    <div className="app" data-testid="app" onKeyDown={handleKeyDown} tabIndex={-1}>
+      <header className="toolbar" data-testid="toolbar">
+        <button
+          className="toolbar-btn"
+          data-testid="open-folder-btn"
+          onClick={openFolder}
+          title="フォルダを開く"
+        >
           <FolderIcon />
           <span>フォルダを開く</span>
         </button>
 
         <div className="toolbar-center">
           {selectedFile && (
-            <span className="file-name">
+            <span className="file-name" data-testid="file-name">
               {selectedFile}
-              {isDirty && <span className="dirty-indicator">●</span>}
+              {isDirty && <span className="dirty-indicator" data-testid="dirty-indicator">●</span>}
             </span>
           )}
         </div>
 
         <div className="toolbar-right">
-          <div className="view-mode-toggle">
+          <div className="view-mode-toggle" data-testid="view-mode-toggle">
             <button
               className={`toggle-btn ${viewMode === "edit" ? "active" : ""}`}
+              data-testid="view-mode-edit"
               onClick={() => setViewMode("edit")}
               title="編集モード"
             >
@@ -113,6 +119,7 @@ function App() {
             </button>
             <button
               className={`toggle-btn ${viewMode === "split" ? "active" : ""}`}
+              data-testid="view-mode-split"
               onClick={() => setViewMode("split")}
               title="分割表示"
             >
@@ -120,6 +127,7 @@ function App() {
             </button>
             <button
               className={`toggle-btn ${viewMode === "preview" ? "active" : ""}`}
+              data-testid="view-mode-preview"
               onClick={() => setViewMode("preview")}
               title="プレビューモード"
             >
@@ -130,6 +138,7 @@ function App() {
           {selectedFile && (
             <button
               className={`toolbar-btn save-btn ${isSaving ? "saving" : ""} ${isDirty ? "dirty" : ""}`}
+              data-testid="save-btn"
               onClick={handleSave}
               disabled={isSaving || !isDirty}
               title="保存 (⌘S)"
@@ -140,6 +149,7 @@ function App() {
 
           <button
             className="toolbar-btn theme-btn"
+            data-testid="theme-toggle-btn"
             onClick={toggleTheme}
             title={theme === "dark" ? "ライトモードに切り替え" : "ダークモードに切り替え"}
           >
@@ -150,6 +160,7 @@ function App() {
 
           <button
             className="toolbar-btn theme-btn"
+            data-testid="settings-btn"
             onClick={() => setIsSettingsOpen(true)}
             title="設定"
           >
@@ -158,7 +169,7 @@ function App() {
         </div>
       </header>
 
-      <div className="main-layout">
+      <div className="main-layout" data-testid="main-layout">
         <Sidebar
           folderPath={folderPath}
           paths={paths}
@@ -168,16 +179,16 @@ function App() {
           theme={theme}
         />
 
-        <div className="editor-area">
+        <div className="editor-area" data-testid="editor-area">
           <TabBar />
 
-          <div className="content-area">
+          <div className="content-area" data-testid="content-area">
             {tabs.length === 0 ? (
-              <div className="empty-state">
+              <div className="empty-state" data-testid="empty-state">
                 <div className="empty-state-icon">
                   <NoteIcon />
                 </div>
-                <p>
+                <p data-testid="empty-state-message">
                   {folderPath
                     ? "サイドバーからファイルを選択してください"
                     : "「フォルダを開く」からノートフォルダを選択してください"}
@@ -191,7 +202,10 @@ function App() {
                 return (
                   <div key={tab.id} className={`tab-content${isActive ? "" : " tab-hidden"}`}>
                     {(viewMode === "edit" || viewMode === "split") && (
-                      <div className={`editor-pane ${viewMode === "split" ? "split" : "full"}`}>
+                      <div
+                        className={`editor-pane ${viewMode === "split" ? "split" : "full"}`}
+                        data-testid="editor-pane"
+                      >
                         <Editor
                           value={tab.content}
                           onChange={isActive ? handleContentChange : () => {}}
@@ -201,7 +215,10 @@ function App() {
                       </div>
                     )}
                     {viewMode !== "edit" && (
-                      <div className={`preview-pane ${viewMode === "split" ? "split" : "full"}`}>
+                      <div
+                        className={`preview-pane ${viewMode === "split" ? "split" : "full"}`}
+                        data-testid="preview-pane"
+                      >
                         {tabIsMarkdown ? (
                           <Preview content={tab.content} theme={theme} />
                         ) : (

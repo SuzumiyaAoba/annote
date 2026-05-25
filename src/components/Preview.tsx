@@ -220,10 +220,10 @@ export default function Preview({ content, theme }: PreviewProps) {
   }, [theme, resolveImageSrc]);
 
   return (
-    <div className="preview-outer">
-      <div className="preview-container" ref={bodyRef}>
+    <div className="preview-outer" data-testid="preview-outer">
+      <div className="preview-container" data-testid="preview-container" ref={bodyRef}>
         {hasFrontmatter && <FrontmatterTable data={frontmatter} />}
-        <div className="markdown-body">
+        <div className="markdown-body" data-testid="markdown-body">
           <ReactMarkdown
             remarkPlugins={REMARK_PLUGINS}
             rehypePlugins={REHYPE_PLUGINS}

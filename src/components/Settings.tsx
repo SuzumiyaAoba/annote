@@ -78,9 +78,10 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="settings-backdrop" onClick={onClose}>
+    <div className="settings-backdrop" data-testid="settings-backdrop" onClick={onClose}>
       <div
         className="settings-modal"
+        data-testid="settings-modal"
         role="dialog"
         aria-modal="true"
         aria-label="設定"
@@ -88,7 +89,12 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       >
         <div className="settings-header">
           <h2 className="settings-title">設定</h2>
-          <button className="settings-close" onClick={onClose} aria-label="閉じる">
+          <button
+            className="settings-close"
+            data-testid="settings-close-btn"
+            onClick={onClose}
+            aria-label="閉じる"
+          >
             <CloseIcon />
           </button>
         </div>
@@ -125,11 +131,12 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               <span className="settings-section-label">キーバインド</span>
               <span className="settings-section-description">エディターのキーバインドモード</span>
             </div>
-            <div className="settings-option-row">
+            <div className="settings-option-row" data-testid="keymap-options">
               {KEYMAP_OPTIONS.map((opt) => (
                 <button
                   key={opt.value}
                   className={`preset-btn ${keymap === opt.value ? "active" : ""}`}
+                  data-testid={`keymap-${opt.value}-btn`}
                   onClick={() => setKeymap(opt.value)}
                 >
                   {opt.label}
@@ -145,11 +152,12 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               <span className="settings-section-label">自動保存</span>
               <span className="settings-section-description">変更後の自動保存タイミング</span>
             </div>
-            <div className="settings-option-row">
+            <div className="settings-option-row" data-testid="autosave-options">
               {AUTOSAVE_OPTIONS.map((opt) => (
                 <button
                   key={opt.value}
                   className={`preset-btn ${autosaveMs === opt.value ? "active" : ""}`}
+                  data-testid={`autosave-${opt.value}-btn`}
                   onClick={() => setAutosaveMs(opt.value)}
                 >
                   {opt.label}
@@ -169,6 +177,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               <label className="settings-toggle-label">
                 <input
                   type="checkbox"
+                  data-testid="scroll-sync-checkbox"
                   checked={scrollSync}
                   onChange={(e) => setScrollSync(e.target.checked)}
                 />
@@ -177,6 +186,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               <label className="settings-toggle-label">
                 <input
                   type="checkbox"
+                  data-testid="toc-open-checkbox"
                   checked={tocOpen}
                   onChange={(e) => setTocOpen(e.target.checked)}
                 />

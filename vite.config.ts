@@ -1,8 +1,11 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import path from "path";
 
 // @ts-expect-error process is a nodejs global
 const host = process.env.TAURI_DEV_HOST;
+// @ts-expect-error process is a nodejs global
+const isTestMode = !!process.env.VITE_TEST_MODE;
 
 // https://vite.dev/config/
 export default defineConfig(async () => ({
@@ -14,8 +17,8 @@ export default defineConfig(async () => ({
   clearScreen: false,
   // 2. tauri expects a fixed port, fail if that port is not available
   server: {
-    port: 1420,
-    strictPort: true,
+    port: isTestMode ? 4173 : 1420,
+    strictPort: !isTestMode,
     host: host || false,
     hmr: host
       ? {
@@ -29,4 +32,23 @@ export default defineConfig(async () => ({
       ignored: ["**/src-tauri/**"],
     },
   },
+
+  ...(isTestMode
+    ? {
+        resolve: {
+          alias: {
+            "@tauri-apps/plugin-dialog": path.resolve(
+              __dirname,
+              "src/__mocks__/tauri-dialog.ts",
+            ),
+            "@tauri-apps/plugin-fs": path.resolve(__dirname, "src/__mocks__/tauri-fs.ts"),
+            "@tauri-apps/api/core": path.resolve(__dirname, "src/__mocks__/tauri-core.ts"),
+            "@tauri-apps/plugin-opener": path.resolve(
+              __dirname,
+              "src/__mocks__/tauri-opener.ts",
+            ),
+          },
+        },
+      }
+    : {}),
 }));

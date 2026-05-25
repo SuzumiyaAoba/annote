@@ -36,6 +36,9 @@ export default function TabItem({
     <div
       ref={ref}
       className={`tab-item ${isActive ? "active" : ""}`}
+      data-testid="tab-item"
+      data-tab-path={tab.relativePath ?? ""}
+      data-active={isActive ? "true" : "false"}
       title={tab.relativePath ?? "新規ファイル"}
       draggable
       onClick={onActivate}
@@ -55,12 +58,17 @@ export default function TabItem({
         onDrop(index);
       }}
     >
-      <span className="tab-label">
+      <span className="tab-label" data-testid="tab-label">
         {fileName(tab)}
-        {isDirty && <span className="tab-dirty">●</span>}
+        {isDirty && (
+          <span className="tab-dirty" data-testid="tab-dirty">
+            ●
+          </span>
+        )}
       </span>
       <button
         className="tab-close"
+        data-testid="tab-close-btn"
         title="閉じる"
         onClick={(e) => {
           e.stopPropagation();

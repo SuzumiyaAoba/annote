@@ -128,34 +128,61 @@ export default function Sidebar({
   }, [selectedFile, deleteEntry, folderPath, persistSession]);
 
   return (
-    <aside className="sidebar">
-      <div className="sidebar-header">
+    <aside className="sidebar" data-testid="sidebar">
+      <div className="sidebar-header" data-testid="sidebar-header">
         {folderName ? (
-          <button className="folder-name-btn" onClick={onOpenFolder} title={folderPath ?? ""}>
+          <button
+            className="folder-name-btn"
+            data-testid="folder-name-btn"
+            onClick={onOpenFolder}
+            title={folderPath ?? ""}
+          >
             <FolderOpenIcon />
-            <span className="folder-name-text">{folderName}</span>
+            <span className="folder-name-text" data-testid="folder-name-text">
+              {folderName}
+            </span>
           </button>
         ) : (
-          <button className="open-folder-empty-btn" onClick={onOpenFolder}>
+          <button
+            className="open-folder-empty-btn"
+            data-testid="sidebar-open-folder-btn"
+            onClick={onOpenFolder}
+          >
             <FolderOpenIcon />
             <span>フォルダを開く</span>
           </button>
         )}
         {folderPath && (
-          <div className="sidebar-actions">
-            <button className="sidebar-action-btn" title="新規ファイル" onClick={handleNewFile}>
+          <div className="sidebar-actions" data-testid="sidebar-actions">
+            <button
+              className="sidebar-action-btn"
+              data-testid="new-file-btn"
+              title="新規ファイル"
+              onClick={handleNewFile}
+            >
               <NewFileIcon />
             </button>
-            <button className="sidebar-action-btn" title="新規フォルダ" onClick={handleNewFolder}>
+            <button
+              className="sidebar-action-btn"
+              data-testid="new-folder-btn"
+              title="新規フォルダ"
+              onClick={handleNewFolder}
+            >
               <NewFolderIcon />
             </button>
             {selectedFile && (
               <>
-                <button className="sidebar-action-btn" title="リネーム" onClick={handleRename}>
+                <button
+                  className="sidebar-action-btn"
+                  data-testid="rename-btn"
+                  title="リネーム"
+                  onClick={handleRename}
+                >
                   <RenameIcon />
                 </button>
                 <button
                   className="sidebar-action-btn sidebar-action-danger"
+                  data-testid="delete-btn"
                   title="削除"
                   onClick={handleDelete}
                 >
@@ -167,7 +194,7 @@ export default function Sidebar({
         )}
       </div>
 
-      <div className="sidebar-tree">
+      <div className="sidebar-tree" data-testid="sidebar-tree">
         {folderPath && paths.length > 0 ? (
           <FileTreeView
             key={folderPath}
@@ -177,7 +204,9 @@ export default function Sidebar({
             theme={theme}
           />
         ) : folderPath ? (
-          <div className="empty-folder">フォルダが空です</div>
+          <div className="empty-folder" data-testid="empty-folder">
+            フォルダが空です
+          </div>
         ) : null}
       </div>
       <input ref={newFileInputRef} style={{ display: "none" }} />
@@ -330,22 +359,37 @@ function InputPromptModal({ message, defaultValue, onConfirm, onCancel }: InputP
   };
 
   return (
-    <div className="prompt-backdrop" onClick={onCancel}>
-      <div className="prompt-modal" onClick={(e) => e.stopPropagation()}>
-        <p className="prompt-message">{message}</p>
+    <div className="prompt-backdrop" data-testid="prompt-backdrop" onClick={onCancel}>
+      <div
+        className="prompt-modal"
+        data-testid="prompt-modal"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <p className="prompt-message" data-testid="prompt-message">
+          {message}
+        </p>
         <input
           ref={handleMount}
           className="prompt-input"
+          data-testid="prompt-input"
           type="text"
           value={value}
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={handleKeyDown}
         />
         <div className="prompt-actions">
-          <button className="prompt-btn prompt-btn-cancel" onClick={onCancel}>
+          <button
+            className="prompt-btn prompt-btn-cancel"
+            data-testid="prompt-cancel-btn"
+            onClick={onCancel}
+          >
             キャンセル
           </button>
-          <button className="prompt-btn prompt-btn-confirm" onClick={() => onConfirm(value)}>
+          <button
+            className="prompt-btn prompt-btn-confirm"
+            data-testid="prompt-confirm-btn"
+            onClick={() => onConfirm(value)}
+          >
             OK
           </button>
         </div>
