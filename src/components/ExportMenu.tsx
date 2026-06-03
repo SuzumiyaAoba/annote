@@ -2,6 +2,8 @@ import { useCallback, useRef, useState } from "react";
 import { save } from "@tauri-apps/plugin-dialog";
 import { writeTextFile } from "@tauri-apps/plugin-fs";
 import { useTabsStore } from "../stores/tabsStore";
+import { stripMarkdownExt } from "../lib/path";
+import { ExportIcon, HtmlIcon, PrintIcon } from "./icons";
 import "./ExportMenu.css";
 
 export default function ExportMenu() {
@@ -20,7 +22,7 @@ export default function ExportMenu() {
       return;
     }
 
-    const fileName = tab.relativePath?.replace(/\.(md|markdown)$/i, "") ?? "export";
+    const fileName = tab.relativePath ? stripMarkdownExt(tab.relativePath) : "export";
     const safeTitle = fileName
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
@@ -100,61 +102,5 @@ ${previewEl.innerHTML}
         </>
       )}
     </div>
-  );
-}
-
-function ExportIcon() {
-  return (
-    <svg
-      width="15"
-      height="15"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-      <polyline points="7 10 12 15 17 10" />
-      <line x1="12" y1="15" x2="12" y2="3" />
-    </svg>
-  );
-}
-
-function HtmlIcon() {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <polyline points="16 18 22 12 16 6" />
-      <polyline points="8 6 2 12 8 18" />
-    </svg>
-  );
-}
-
-function PrintIcon() {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <polyline points="6 9 6 2 18 2 18 9" />
-      <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
-      <rect x="6" y="14" width="12" height="8" />
-    </svg>
   );
 }

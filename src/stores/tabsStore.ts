@@ -1,6 +1,22 @@
 import { create } from "zustand";
 import { nanoid } from "nanoid";
 import { readTextFile, writeTextFile } from "@tauri-apps/plugin-fs";
+import { isDirPath, joinPath, stripTrailingSlash } from "../lib/path";
+
+/**
+ * タブを閉じたあとにアクティブにすべきタブの id を求める。
+ * 閉じたタブがアクティブでなければ現在のアクティブ id を保つ。
+ */
+function computeNextActiveId(
+  tabs: TabState[],
+  removedId: string,
+  activeId: string | null,
+): string | null {
+  if (activeId !== removedId) return activeId;
+  const idx = tabs.findIndex((t) => t.id === removedId);
+  const remaining = tabs.filter((t) => t.id !== removedId);
+  return remaining[idx]?.id ?? remaining[idx - 1]?.id ?? null;
+}
 
 export interface TabState {
   id: string;
@@ -53,7 +69,7 @@ export const useTabsStore = create<TabsStore>()((set, get) => ({
   },
 
   openFile: async (folderPath: string, relativePath: string) => {
-    if (relativePath.endsWith("/")) return;
+    if (isDirPath(relativePath)) return;
     const { tabs, setActiveId } = get();
 
     const existing = tabs.find((t) => t.relativePath === relativePath);
@@ -62,7 +78,7 @@ export const useTabsStore = create<TabsStore>()((set, get) => ({
       return;
     }
 
-    const fullPath = `${folderPath}/${relativePath}`;
+    const fullPath = joinPath(folderPath, relativePath);
     try {
       const content = await readTextFile(fullPath);
       const id = nanoid();
@@ -82,13 +98,10 @@ export const useTabsStore = create<TabsStore>()((set, get) => ({
       const confirmed = window.confirm("変更を破棄しますか？");
       if (!confirmed) return;
     }
-    const idx = tabs.findIndex((t) => t.id === id);
-    const nextTabs = tabs.filter((t) => t.id !== id);
-    let nextActiveId: string | null = activeId;
-    if (activeId === id) {
-      nextActiveId = nextTabs[idx]?.id ?? nextTabs[idx - 1]?.id ?? null;
-    }
-    set({ tabs: nextTabs, activeId: nextActiveId });
+    set({
+      tabs: tabs.filter((t) => t.id !== id),
+      activeId: computeNextActiveId(tabs, id, activeId),
+    });
   },
 
   setContent: (id: string, value: string) => {
@@ -145,21 +158,18 @@ export const useTabsStore = create<TabsStore>()((set, get) => ({
     const { tabs, activeId } = get();
     const tab = tabs.find((t) => t.relativePath === relativePath);
     if (!tab) return;
-    const idx = tabs.findIndex((t) => t.id === tab.id);
-    const nextTabs = tabs.filter((t) => t.id !== tab.id);
-    let nextActiveId = activeId;
-    if (activeId === tab.id) {
-      nextActiveId = nextTabs[idx]?.id ?? nextTabs[idx - 1]?.id ?? null;
-    }
-    set({ tabs: nextTabs, activeId: nextActiveId });
+    set({
+      tabs: tabs.filter((t) => t.id !== tab.id),
+      activeId: computeNextActiveId(tabs, tab.id, activeId),
+    });
     if (folderPath) {
       setTimeout(() => get().persistSession(folderPath), 0);
     }
   },
 
   renameTabPath: (oldRelativePath: string, newRelativePath: string, folderPath: string) => {
-    const cleanOld = oldRelativePath.replace(/\/$/, "");
-    const cleanNew = newRelativePath.replace(/\/$/, "");
+    const cleanOld = stripTrailingSlash(oldRelativePath);
+    const cleanNew = stripTrailingSlash(newRelativePath);
     set((s) => ({
       tabs: s.tabs.map((t) => {
         if (!t.relativePath) return t;
@@ -167,7 +177,7 @@ export const useTabsStore = create<TabsStore>()((set, get) => ({
           return {
             ...t,
             relativePath: cleanNew,
-            fullPath: `${folderPath}/${cleanNew}`,
+            fullPath: joinPath(folderPath, cleanNew),
           };
         }
         return t;
@@ -185,7 +195,7 @@ export const useTabsStore = create<TabsStore>()((set, get) => ({
 
       const loaded: TabState[] = [];
       for (const relativePath of session.paths) {
-        const fullPath = `${folderPath}/${relativePath}`;
+        const fullPath = joinPath(folderPath, relativePath);
         try {
           const content = await readTextFile(fullPath);
           loaded.push({

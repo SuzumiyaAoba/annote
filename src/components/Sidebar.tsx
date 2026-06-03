@@ -2,6 +2,8 @@ import { useCallback, useRef, useState } from "react";
 import { useFileTree, FileTree } from "@pierre/trees/react";
 import { useWorkspaceStore } from "../stores/workspaceStore";
 import { useTabsStore } from "../stores/tabsStore";
+import { basename, isDirPath, parentDir, stripTrailingSlash } from "../lib/path";
+import { DeleteIcon, FolderOpenIcon, NewFileIcon, NewFolderIcon, RenameIcon } from "./icons";
 import "./Sidebar.css";
 
 const TREE_THEME_DARK: React.CSSProperties = {
@@ -64,7 +66,6 @@ export default function Sidebar({
 }: SidebarProps) {
   const { createFile, createDir, renameEntry, deleteEntry } = useWorkspaceStore();
   const { persistSession } = useTabsStore();
-  const newFileInputRef = useRef<HTMLInputElement | null>(null);
   const [promptState, setPromptState] = useState<PromptState | null>(null);
 
   const showPrompt = useCallback((message: string, defaultValue = "") => {
@@ -84,16 +85,11 @@ export default function Sidebar({
     });
   }, []);
 
-  const folderName = folderPath ? folderPath.split("/").pop() || folderPath : null;
+  const folderName = folderPath ? basename(folderPath) || folderPath : null;
 
   const getSelectedDir = useCallback(() => {
     if (!selectedFile) return "";
-    if (selectedFile.endsWith("/")) {
-      return selectedFile.replace(/\/$/, "");
-    }
-    const parts = selectedFile.split("/");
-    parts.pop();
-    return parts.join("/");
+    return isDirPath(selectedFile) ? stripTrailingSlash(selectedFile) : parentDir(selectedFile);
   }, [selectedFile]);
 
   const handleNewFile = useCallback(async () => {
@@ -113,7 +109,7 @@ export default function Sidebar({
 
   const handleRename = useCallback(async () => {
     if (!selectedFile) return;
-    const baseName = selectedFile.replace(/\/$/, "").split("/").pop() ?? "";
+    const baseName = basename(selectedFile);
     const newName = await showPrompt("新しい名前:", baseName);
     if (!newName?.trim() || newName.trim() === baseName) return;
     await renameEntry(selectedFile, newName.trim());
@@ -122,7 +118,7 @@ export default function Sidebar({
 
   const handleDelete = useCallback(async () => {
     if (!selectedFile) return;
-    const isDir = selectedFile.endsWith("/");
+    const isDir = isDirPath(selectedFile);
     await deleteEntry(selectedFile, isDir);
     if (folderPath) persistSession(folderPath);
   }, [selectedFile, deleteEntry, folderPath, persistSession]);
@@ -209,7 +205,6 @@ export default function Sidebar({
           </div>
         ) : null}
       </div>
-      <input ref={newFileInputRef} style={{ display: "none" }} />
       {promptState && (
         <InputPromptModal
           message={promptState.message}
@@ -236,7 +231,7 @@ function FileTreeView({ paths, selectedFile, onFileSelect, theme }: FileTreeView
     initialSelectedPaths: selectedFile ? [selectedFile] : [],
     onSelectionChange: (selectedPaths) => {
       const path = selectedPaths[0];
-      if (path && !path.endsWith("/")) {
+      if (path && !isDirPath(path)) {
         onFileSelect(path);
       }
     },
@@ -244,89 +239,6 @@ function FileTreeView({ paths, selectedFile, onFileSelect, theme }: FileTreeView
 
   const treeTheme = theme === "dark" ? TREE_THEME_DARK : TREE_THEME_LIGHT;
   return <FileTree model={model} style={treeTheme} />;
-}
-
-function FolderOpenIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M20 6h-8l-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z" />
-    </svg>
-  );
-}
-
-function NewFileIcon() {
-  return (
-    <svg
-      width="13"
-      height="13"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-      <polyline points="14 2 14 8 20 8" />
-      <line x1="12" y1="18" x2="12" y2="12" />
-      <line x1="9" y1="15" x2="15" y2="15" />
-    </svg>
-  );
-}
-
-function NewFolderIcon() {
-  return (
-    <svg
-      width="13"
-      height="13"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-      <line x1="12" y1="11" x2="12" y2="17" />
-      <line x1="9" y1="14" x2="15" y2="14" />
-    </svg>
-  );
-}
-
-function RenameIcon() {
-  return (
-    <svg
-      width="13"
-      height="13"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-    </svg>
-  );
-}
-
-function DeleteIcon() {
-  return (
-    <svg
-      width="13"
-      height="13"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <polyline points="3 6 5 6 21 6" />
-      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
-    </svg>
-  );
 }
 
 interface InputPromptModalProps {
@@ -360,11 +272,7 @@ function InputPromptModal({ message, defaultValue, onConfirm, onCancel }: InputP
 
   return (
     <div className="prompt-backdrop" data-testid="prompt-backdrop" onClick={onCancel}>
-      <div
-        className="prompt-modal"
-        data-testid="prompt-modal"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className="prompt-modal" data-testid="prompt-modal" onClick={(e) => e.stopPropagation()}>
         <p className="prompt-message" data-testid="prompt-message">
           {message}
         </p>

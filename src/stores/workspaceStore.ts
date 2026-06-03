@@ -3,6 +3,7 @@ import { open } from "@tauri-apps/plugin-dialog";
 import { mkdir, writeTextFile, rename, remove } from "@tauri-apps/plugin-fs";
 import { invoke } from "@tauri-apps/api/core";
 import { useTabsStore } from "./tabsStore";
+import { joinPath, replaceBasename, stripTrailingSlash } from "../lib/path";
 
 export interface WorkspaceState {
   folderPath: string | null;
@@ -42,27 +43,23 @@ export const useWorkspaceStore = create<WorkspaceState>()((set, get) => ({
   createFile: async (dirRelativePath: string, name: string) => {
     const { folderPath, refreshPaths } = get();
     if (!folderPath) return;
-    const base = dirRelativePath ? `${folderPath}/${dirRelativePath}` : folderPath;
-    await writeTextFile(`${base}/${name}`, "");
+    await writeTextFile(joinPath(folderPath, dirRelativePath, name), "");
     await refreshPaths();
   },
 
   createDir: async (dirRelativePath: string, name: string) => {
     const { folderPath, refreshPaths } = get();
     if (!folderPath) return;
-    const base = dirRelativePath ? `${folderPath}/${dirRelativePath}` : folderPath;
-    await mkdir(`${base}/${name}`, { recursive: true });
+    await mkdir(joinPath(folderPath, dirRelativePath, name), { recursive: true });
     await refreshPaths();
   },
 
   renameEntry: async (oldRelativePath: string, newName: string) => {
     const { folderPath, refreshPaths } = get();
     if (!folderPath) return;
-    const parts = oldRelativePath.replace(/\/$/, "").split("/");
-    parts[parts.length - 1] = newName;
-    const newRelativePath = parts.join("/");
-    const oldFull = `${folderPath}/${oldRelativePath.replace(/\/$/, "")}`;
-    const newFull = `${folderPath}/${newRelativePath}`;
+    const newRelativePath = replaceBasename(oldRelativePath, newName);
+    const oldFull = joinPath(folderPath, oldRelativePath);
+    const newFull = joinPath(folderPath, newRelativePath);
     await rename(oldFull, newFull);
     // タブのパスを更新
     useTabsStore.getState().renameTabPath(oldRelativePath, newRelativePath, folderPath);
@@ -72,7 +69,7 @@ export const useWorkspaceStore = create<WorkspaceState>()((set, get) => ({
   deleteEntry: async (relativePath: string, isDir: boolean) => {
     const { folderPath, refreshPaths } = get();
     if (!folderPath) return;
-    const cleanPath = relativePath.replace(/\/$/, "");
+    const cleanPath = stripTrailingSlash(relativePath);
     const { tabs } = useTabsStore.getState();
     const affectedTabs = isDir
       ? tabs.filter((t) => t.relativePath?.startsWith(`${cleanPath}/`))
@@ -83,7 +80,7 @@ export const useWorkspaceStore = create<WorkspaceState>()((set, get) => ({
         ? `「${cleanPath}」を削除しますか？\n未保存の変更が ${dirtyCount} 件あります。削除すると失われます。`
         : `「${cleanPath}」を削除しますか？`;
     if (!window.confirm(message)) return;
-    const fullPath = `${folderPath}/${cleanPath}`;
+    const fullPath = joinPath(folderPath, cleanPath);
     await remove(fullPath, { recursive: isDir });
     for (const tab of affectedTabs) {
       if (tab.relativePath) {
